@@ -11,7 +11,6 @@ engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Định nghĩa mô hình LicensePlate
 class LicensePlate(Base):
     __tablename__ = 'license_plates'
     
