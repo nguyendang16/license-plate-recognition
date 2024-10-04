@@ -8,13 +8,13 @@ from concurrent.futures import ThreadPoolExecutor
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 # Load the YOLOv8 model
-model = YOLO('//Users/nguyendang/licensce-plate/plate_yolov8n_320_2024.pt')  # Replace with your trained YOLO model
+model = YOLO('/Users/nguyendang/license-plate-recognition/models/best.pt')  # Replace with your trained YOLO model
 
 # Initialize PaddleOCR for English language
 ocr = PaddleOCR(use_angle_cls=True, lang='en')
 
 # Open the video file
-video_path = '/Users/nguyendang/licensce-plate/test_video/test_6.mp4'
+video_path = '/Users/nguyendang/licensce-plate/test_video/test_4.mp4'
 cap = cv2.VideoCapture(video_path)
 
 # Set IoU threshold and confidence threshold for NMS

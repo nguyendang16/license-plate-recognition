@@ -7,7 +7,7 @@ import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 # Load the YOLOv8 model
-model = YOLO('//Users/nguyendang/licensce-plate/plate_yolov8n_320_2024.pt') 
+model = YOLO('/Users/nguyendang/license-plate-recognition/models/best.pt') 
 
 # Initialize PaddleOCR for English language
 ocr = PaddleOCR(use_angle_cls=True, lang='en')
