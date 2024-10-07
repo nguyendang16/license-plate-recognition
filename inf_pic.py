@@ -7,13 +7,13 @@ import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 # Load the YOLOv8 model
-model = YOLO('/Users/nguyendang/license-plate-recognition/models/best.pt') 
+model = YOLO('/Users/nguyendang/license-plate-recognition/models/plate_new.pt') 
 
 # Initialize PaddleOCR for English language
 ocr = PaddleOCR(use_angle_cls=True, lang='en')
 
 # Load the image file
-image_path = '/Users/nguyendang/licensce-plate/car_long/6759.jpg'
+image_path = '/Users/nguyendang/license-plate-recognition/vn_license_plate/train/images/Dieu_0236.png'
 frame = cv2.imread(image_path)
 
 # Set IoU threshold and confidence threshold for NMS

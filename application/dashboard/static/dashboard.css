@@ -1,0 +1,101 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f6f9;
+}
+.sidebar {
+    height: 100vh;
+    width: 200px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: #ffffff;
+    padding-top: 20px;
+    box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.1);
+}
+.sidebar a {
+    padding: 15px 20px;
+    text-decoration: none;
+    font-size: 18px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.sidebar a img {
+    width: 24px;
+    margin-right: 10px;
+}
+.sidebar a:hover {
+    background-color: #ececec;
+}
+.content {
+    margin-left: 220px;
+    padding: 20px;
+}
+.balance {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.balance-box {
+    text-align: center;
+}
+.balance-box h3 {
+    margin: 0;
+    font-size: 18px;
+}
+.balance-box p {
+    margin: 5px 0 0 0;
+    font-size: 22px;
+    font-weight: bold;
+}
+.trade-section {
+    background-color: white;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+.trade-section button {
+    padding: 10px 20px;
+    font-size: 16px;
+    color: white;
+    background-color: #5c6bc0;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.trading-orders {
+    margin-top: 20px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+.trading-orders ul {
+    list-style: none;
+    padding: 0;
+}
+.trading-orders li {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+.trading-orders li img {
+    width: 25px;
+    margin-right: 10px;
+}
+.footer {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+}

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Thông Tin Khách</title>
+    <link rel="stylesheet" href="/application/dashboard/static/guest.css">
+</head>
+<body>
+    <div class="header">
+        <a href="/" class="home-button">TRANG CHỦ</a>
+    </div>
+    
+    <div class="container">
+        <h1>Quản Lý Thông Tin Khách</h1>
+        {% if message %}
+            <div class="alert-success">{{ message }}</div>
+        {% endif %}
+        <div class="content">
+            <div class="left-section">
+                <form method="post" action="/guest">
+                    <input type="hidden" name="action" value="{{ action }}">
+                    <div class="section">
+                        <label class="label-small" for="request_type">Loại yêu cầu</label>
+                        <div class="radio-group">
+                            <input type="radio" name="request_type" value="once" {% if data.request_type == 'once' %}checked{% endif %} {% if not is_editable %}disabled{% endif %}> Một lần
+                            <input type="radio" name="request_type" value="repeat" {% if data.request_type == 'repeat' %}checked{% endif %} {% if not is_editable %}disabled{% endif %}> Lặp lại
+                        </div>
+
+                        <h3>Thông tin chung</h3>
+                        <div class="row">
+                            <div class="field">
+                                <label>Ngày bắt đầu <span class="required">*</span></label>
+                                <input type="date" name="ngay_bat_dau" class="small-input" required value="{{ data.ngay_bat_dau }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                            <div class="field">
+                                <label>Khu vực làm việc <span class="required">*</span></label>
+                                <input type="text" name="khu_vuc_lam_viec" class="small-input" placeholder="Nhập khu vực làm việc" required value="{{ data.khu_vuc_lam_viec }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="field">
+                                <label>Phòng ban</label>
+                                <input type="text" name="phong_ban" class="small-input" placeholder="Nhập phòng ban" value="{{ data.phong_ban }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                            <div class="field">
+                                <label>Đơn vị đến <span class="required">*</span></label>
+                                <input type="text" name="don_vi_den" class="small-input" placeholder="Nhập đơn vị" required value="{{ data.don_vi_den }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="field">
+                                <label>Mục đích <span class="required">*</span></label>
+                                <input type="text" name="muc_dich" class="small-input" placeholder="Nhập mục đích đến" required value="{{ data.muc_dich }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                            <div class="field">
+                                <label>Văn bản tham chiếu</label> 
+                                <input type="text" name="van_ban_tham_chieu" class="small-input" placeholder="Nhập số văn bản" value="{{ data.van_ban_tham_chieu }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>Thông tin khách</h3>
+                        <div class="row">
+                            <div class="field">
+                                <label>Số giấy tờ <span class="required">*</span></label>
+                                <input type="text" name="so_giay_to" class="small-input" placeholder="Nhập số giấy tờ" required value="{{ data.so_giay_to }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                            <div class="field">
+                                <label>Tên khách <span class="required">*</span></label>
+                                <input type="text" name="ten_khach" class="small-input" placeholder="Nhập tên khách" required value="{{ data.ten_khach }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="field">
+                                <label>Số điện thoại <span class="required">*</span></label>
+                                <input type="text" name="so_dien_thoai" class="small-input" placeholder="Nhập số điện thoại" required value="{{ data.so_dien_thoai }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                            <div class="field">
+                                <label>Địa chỉ / Công ty <span class="required">*</span></label>
+                                <input type="text" name="dia_chi_cong_ty" class="small-input" placeholder="Nhập địa chỉ hoặc công ty" required value="{{ data.dia_chi_cong_ty }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="field">
+                                <label>Là khách đại diện <span class="required">*</span></label>
+                                <input type="text" name="khach_dai_dien" class="small-input" placeholder="Nhập tên người đại diện" required value="{{ data.khach_dai_dien }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>Thông tin xe</h3>
+                        <div class="row">
+                            <div class="field">
+                                <label>Tên xe <span class="required">*</span></label>
+                                <input type="text" name="ten_xe" class="small-input" placeholder="Nhập tên xe" required value="{{ data.ten_xe }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                            <div class="field">
+                                <label>Biển số <span class="required">*</span></label>
+                                <input type="text" name="bien_so" class="small-input" placeholder="Nhập biển số xe" required value="{{ data.bien_so }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="field">
+                                <label>Tên lái xe <span class="required">*</span></label>
+                                <input type="text" name="ten_lai_xe" class="small-input" placeholder="Nhập tên lái xe" required value="{{ data.ten_lai_xe }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-container">
+                        <button type="button" class="open-button">MỞ CỔNG</button>
+                        <button type="submit" class="edit-button">{{ button_text }}</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="right-section">
+                <div class="image-row">
+                    <div class="image-container">
+                        <div class="image-box">
+                            <img id="image1" src="{{ data.image1_url }}" alt="Ảnh 1">
+                        </div>
+                        <p>THỜI GIAN 1: {{ data.thoi_gian_1 }}</p>
+                    </div>
+                    <div class="image-container">
+                        <div class="image-box">
+                            <img id="image2" src="{{ data.image2_url }}" alt="Ảnh 2">
+                        </div>
+                        <p>THỜI GIAN 2: {{ data.thoi_gian_2 }}</p>
+                    </div>
+                </div>
+                <div class="image-row">
+                    <div class="image-container">
+                        <div class="image-box">
+                            <img id="image3" src="{{ data.image3_url }}" alt="Ảnh 3">
+                        </div>
+                        <p>THỜI GIAN 3: {{ data.thoi_gian_3 }}</p>
+                    </div>
+                    <div class="image-container">
+                        <div class="image-box">
+                            <img id="image4" src="{{ data.image4_url }}" alt="Ảnh 4">
+                        </div>
+                        <p>THỜI GIAN 4: {{ data.thoi_gian_4 }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
