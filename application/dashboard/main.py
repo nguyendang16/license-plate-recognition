@@ -4,12 +4,24 @@ from fastapi.templating import Jinja2Templates
 from starlette.staticfiles import StaticFiles
 import cv2
 import time
+from ultralytics import YOLO
+from paddleocr import PaddleOCR
+from concurrent.futures import ThreadPoolExecutor
+import os
+
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 # Mount static files
 app.mount("/application/dashboard/static", StaticFiles(directory="static"), name="static")
+
+# Load the YOLO model
+model = YOLO('/Users/nguyendang/license-plate-recognition/models/plate_new.pt')  # Replace with your YOLO model path
+
+# Initialize PaddleOCR
+ocr = PaddleOCR(use_angle_cls=True, lang='en')
 
 # In-memory data store (replace with a database in production)
 data = {
@@ -38,15 +50,50 @@ data = {
     "thoi_gian_4": "14:00:00 03-10-2024",
 }
 
-# Hàm generator chung cho các luồng RTSP
-def gen_frames(rtsp_url):
-    cap = cv2.VideoCapture(rtsp_url)
-    while True:
-        success, frame = cap.read()
-        if not success:
-            time.sleep(1)
-            continue
-        else:
+# YOLO and OCR processing for each frame
+def process_frame(frame):
+    results = model(frame, conf=0.5, iou=0.3)
+    detected_objects = []
+    
+    for result in results:
+        boxes = result.boxes
+        for box in boxes:
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
+            confidence = box.conf[0]
+            label = box.cls[0]
+
+            # Crop the detected object (license plate area)
+            cropped_image = frame[y1:y2, x1:x2]
+
+            # Use PaddleOCR to detect text in the cropped image
+            ocr_result = ocr.ocr(cropped_image)
+            detected_objects.append((x1, y1, x2, y2, ocr_result))
+    
+    return detected_objects
+
+# Generator function to stream frames from a video source with YOLO + OCR processing
+def gen_frames(video_source):
+    cap = cv2.VideoCapture(video_source)
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        while True:
+            success, frame = cap.read()
+            if not success:
+                time.sleep(1)
+                continue
+
+            # Submit frame to the YOLO + OCR model
+            future = executor.submit(process_frame, frame)
+            detected_objects = future.result()
+
+            # Draw detection boxes and recognized text on the frame
+            for (x1, y1, x2, y2, ocr_result) in detected_objects:
+                try:
+                    detected_text = ''.join([text[0] for bounding_box, text in ocr_result[0]])
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    cv2.putText(frame, detected_text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                except:
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
             ret, buffer = cv2.imencode('.jpg', frame)
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
@@ -62,20 +109,21 @@ async def video_feed1():
 async def video_feed2():
     return StreamingResponse(gen_frames('rtsp://pathtech:pathtech1@192.168.1.35:554/stream1'), media_type='multipart/x-mixed-replace; boundary=frame')
 
-# Route cho luồng video thứ ba
+# Route cho luồng video thứ ba 
 @app.get('/video_feed3')
 async def video_feed3():
-    return StreamingResponse(gen_frames('rtsp://rtsp_stream_url_3'), media_type='multipart/x-mixed-replace; boundary=frame')
+    return StreamingResponse(gen_frames(0), media_type='multipart/x-mixed-replace; boundary=frame')
 
 # Route cho luồng video thứ tư
 @app.get('/video_feed4')
 async def video_feed4():
-    return StreamingResponse(gen_frames('rtsp://rtsp_stream_url_4'), media_type='multipart/x-mixed-replace; boundary=frame')
+    return StreamingResponse(gen_frames(1), media_type='multipart/x-mixed-replace; boundary=frame')
 
-# Route cho dashboard.html
+# Route cho admin.html
 @app.get("/", response_class=HTMLResponse)
-async def read_dashboard(request: Request):
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+@app.get("/admin", response_class=HTMLResponse)
+async def read_admin(request: Request):
+    return templates.TemplateResponse("admin.html", {"request": request})
 
 # Route cho guest.html
 @app.get("/guest", response_class=HTMLResponse)
@@ -89,12 +137,10 @@ async def read_guest(request: Request):
         "message": None
     })
 
-# Route cho admin.html
-@app.get("/admin", response_class=HTMLResponse)
-async def read_admin(request: Request):
-    return templates.TemplateResponse("admin.html", {
-        "request": request,
-    })
+# Route cho history.html
+@app.get("/history", response_class=HTMLResponse)
+async def read_history(request: Request):
+    return templates.TemplateResponse("history.html", {"request": request})
 
 # Xử lý POST request cho guest.html
 @app.post("/guest", response_class=HTMLResponse)

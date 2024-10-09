@@ -11,14 +11,14 @@ body {
     background: linear-gradient(135deg, white);
     background-size: cover;
     color: black;
-    height: 100vh;
-    overflow: hidden;
+    /* Xóa chiều cao cố định và overflow */
 }
+
 /* Định dạng cho header */
 .header {
     position: relative;
-    top: 45px; /* Điều chỉnh để thẳng hàng với 'Loại yêu cầu' */
-    left: 105px; /* Đưa nút Home sang phải một chút */
+    top: 45px;
+    left: 105px;
 }
 
 /* Định dạng cho nút Home */
@@ -32,18 +32,19 @@ body {
     font-size: 16px;
 }
 
-/* Thêm hiệu ứng hover cho nút Home */
+/* Hiệu ứng hover cho nút Home */
 .home-button:hover {
     background-color: #0056b3; /* Màu xanh đậm hơn khi hover */
 }
+
 /* Container chính */
 .container {
     width: 100%;
-    height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding-top: 10px;
+    /* Xóa chiều cao cố định */
 }
 
 /* Tiêu đề chính */
@@ -57,53 +58,49 @@ h1 {
 .content {
     display: flex;
     width: 90%;
-    height: calc(100% - 60px); /* Điều chỉnh chiều cao để phù hợp với tiêu đề */
+    /* Xóa chiều cao cố định */
 }
 
 /* Phần bên trái (Form nhập liệu) */
 .left-section {
-    flex: 1;
+    flex: 0.5;
     padding: 10px;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    /* Xóa overflow */
 }
 
 /* Phần bên phải (Hiển thị hình ảnh) */
 .right-section {
-    flex: 1;
+    flex: 1.5;
     padding: 10px;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    /* Xóa overflow */
 }
 
-/* Đặt form trong left-section chiếm toàn bộ chiều cao */
+/* Định dạng form */
 .left-section form {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
-    overflow: hidden;
+    /* Xóa overflow */
 }
 
-/* Cho phần nội dung form cuộn khi vượt quá chiều cao */
 .left-section form > div {
     overflow-y: auto;
 }
 
-/* Điều chỉnh các section trong form */
 .left-section .section {
     margin-bottom: 15px;
 }
 
-/* Điều chỉnh các row trong section */
 .left-section .section .row {
     display: flex;
     justify-content: space-between;
     margin-bottom: 12px;
 }
 
-/* Định dạng cho các trường nhập liệu */
 .field {
     flex: 1;
     margin-right: 10px;
@@ -119,20 +116,17 @@ label {
     font-size: 16px;
 }
 
-/* Định dạng cho dấu sao bắt buộc */
 .required {
     color: red;
     margin-left: 3px;
 }
 
-/* Định dạng cho "Loại yêu cầu" */
 .label-small {
-    font-size: 18px; /* Tăng kích thước chữ để bằng với "Thông tin chung" */
-    font-weight: bold; /* In đậm */
+    font-size: 18px;
+    font-weight: bold;
     margin-bottom: 10px;
 }
 
-/* Định dạng cho các trường input */
 input[type="text"],
 input[type="date"] {
     width: 100%;
@@ -145,7 +139,6 @@ input[type="date"] {
     height: 36px;
 }
 
-/* Class để thu nhỏ các ô nhập liệu */
 .small-input {
     width: 100%;
     padding: 6px;
@@ -153,7 +146,6 @@ input[type="date"] {
     height: 36px;
 }
 
-/* Định dạng cho radio group */
 .radio-group {
     display: flex;
     gap: 20px;
@@ -168,18 +160,16 @@ input[type="date"] {
     font-size: 16px;
 }
 
-/* Định dạng cho tiêu đề nhỏ */
 h3 {
     margin-bottom: 10px;
     font-size: 18px;
     font-weight: bold;
 }
 
-/* Định dạng cho button */
 .button-container {
     display: flex;
     justify-content: flex-end;
-    margin-top: 15px;
+    margin-top: 1px;
 }
 
 button {
@@ -201,7 +191,6 @@ button {
     color: #fff;
 }
 
-/* Định dạng cho thông báo thành công */
 .alert-success {
     background-color: #d4edda;
     color: #155724;
@@ -212,49 +201,57 @@ button {
     font-size: 16px;
 }
 
-/* Định dạng cho phần hiển thị hình ảnh */
+/* Điều chỉnh hiển thị hình ảnh */
 .right-section {
     display: flex;
     flex-direction: column;
-}
-
-.image-row {
-    display: flex;
     flex-grow: 1;
-    justify-content: space-between;
-    margin-bottom: 12px;
 }
 
+/* Lưới hình ảnh */
+.image-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Hai cột */
+    grid-template-rows: 1fr 1fr;    /* Hai hàng */
+    gap: 10px; /* Khoảng cách giữa các ảnh */
+    height: calc(100vh - 150px); /* Điều chỉnh để phù hợp với màn hình */
+}
+
+/* Mỗi khung ảnh */
 .image-container {
-    width: 48%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    position: relative;
+    width: 100%;
+    /* Chiều cao sẽ được xác định bởi grid */
 }
 
+/* Định dạng hộp chứa ảnh */
 .image-box {
-    background-color: #000;
     width: 100%;
-    height: auto; /* Cho phép chiều cao tự động theo nội dung */
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    height: 100%;
+    overflow: hidden;
 }
 
 .image-box img {
     width: 100%;
-    height: auto;
-    object-fit: contain; /* Giữ tỷ lệ ảnh */
+    height: 100%;
+    object-fit: cover;
 }
 
+/* Định dạng chú thích ảnh */
 .image-container p {
-    margin-top: 6px;
-    font-size: 18px;
-    color: black;
+    position: absolute;
+    bottom: 5px;
+    left: 0;
+    width: 100%;
     text-align: center;
+    color: white;
+    background: rgba(0, 0, 0, 0.5);
+    margin: 0;
+    font-size: 14px;
+    padding: 5px 0;
 }
 
-/* Định dạng cho scrollbar trong trường hợp có overflow */
+/* Định dạng scrollbar */
 .left-section form > div::-webkit-scrollbar,
 .right-section::-webkit-scrollbar {
     width: 6px;
@@ -271,12 +268,11 @@ button {
     background-color: transparent;
 }
 
-/* Định dạng cho input date để hiển thị icon đúng màu */
 input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(0);
 }
 
-/* Đảm bảo responsive cho màn hình nhỏ */
+/* Thiết kế responsive */
 @media (max-width: 768px) {
     .content {
         flex-direction: column;
@@ -291,13 +287,17 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         height: auto;
     }
 
-    .image-row {
-        flex-direction: column;
-        align-items: center;
+    .image-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(4, auto);
+        height: auto;
     }
 
-    .image-container {
-        width: 80%;
-        margin-bottom: 12px;
+    .image-box {
+        height: 200px; /* Điều chỉnh nếu cần */
+    }
+
+    .image-box img {
+        object-fit: cover;
     }
 }
