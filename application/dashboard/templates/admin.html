@@ -4,19 +4,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel</title>
-    <link rel="stylesheet" href="/application/dashboard/static/admin.css">
+    <link rel="stylesheet" href="/static/admin.css">
 </head>
 <body>
     <div class="sidebar">
-        <a href="/admin"><img src="https://img.icons8.com/ios-filled/50/000000/admin-settings-male.png" alt="Admin Icon"/> Quản lý</a>
-        <a href="/guest"><img src="https://img.icons8.com/ios-filled/50/000000/information.png" alt="Info Icon"/> Thông tin khách</a>
-        <a href="/history"><img src="https://img.icons8.com/ios-filled/50/000000/time-machine.png" alt="History Icon"/> Lịch sử ra vào</a>
+        <a href="/admin">
+            <img src="https://img.icons8.com/ios-filled/50/000000/admin-settings-male.png" alt="Admin Icon"/>
+            Quản lý
+        </a>
+        <a href="/guest">
+            <img src="https://img.icons8.com/ios-filled/50/000000/information.png" alt="Info Icon"/>
+            Thông tin khách
+        </a>
+        <a href="/history">
+            <img src="https://img.icons8.com/ios-filled/50/000000/time-machine.png" alt="History Icon"/>
+            Lịch sử ra vào
+        </a>
     </div>
 
     <div class="content">
         <h1>Quản lý khách tới văn phòng</h1>
-        <!-- Nội dung trang admin sẽ ở đây -->
-        <table class="customer-table">
+        {% if message %}
+            {% if "thành công" in message %}
+                <div class="alert-success">{{ message }}</div>
+            {% else %}
+                <div class="alert-error">{{ message }}</div>
+            {% endif %}
+        {% endif %}
+
+        <div class="upload-section">
+            <form action="/admin/upload" method="post" enctype="multipart/form-data">
+                <input type="file" name="file" accept=".xlsx, .xls" required>
+                <button type="submit">Tải Lên Excel</button>
+            </form>
+        </div>
+
+        <div class="download-button">
+            <a href="/admin/download">Tải Xuống Excel</a>
+        </div>
+
+        <table class="customer-table" id="admin-table">
             <thead>
                 <tr>
                     <th>STT</th>
@@ -29,35 +56,64 @@
                     <th>Khu vực làm việc</th>
                     <th>Đơn vị đến</th>
                     <th>Biển số</th>
+                    <th>Tên lái xe</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>Một lần</td>
-                    <td>Nguyễn Văn A</td>
-                    <td>11111111</td>
-                    <td>Công ty ABC</td>
-                    <td>Họp mặt</td>
-                    <td>0901234567</td>
-                    <td>Phòng 101</td>
-                    <td>BQL ShowTime</td>
-                    <td>30A-12345</td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>Lặp lại</td>
-                    <td>Trần Thị B</td>
-                    <td>22222222</td>
-                    <td>Công ty DEF</td>
-                    <td>Trao đổi dự án</td>
-                    <td>0912345678</td>
-                    <td>Phòng 102</td>
-                    <td>BQL ShowTime</td>
-                    <td>29B-67890</td>
-                </tr>
+                <!-- Dữ liệu sẽ được thêm qua JavaScript -->
             </tbody>
         </table>
     </div>
+
+    <!-- Thêm JavaScript để lấy và hiển thị dữ liệu admin -->
+    <script>
+        async function fetchAdminData() {
+            try {
+                const response = await fetch('/api/admin');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const adminData = await response.json();
+                populateAdminTable(adminData);
+            } catch (error) {
+                console.error('Error fetching admin data:', error);
+            }
+        }
+
+        function populateAdminTable(adminData) {
+            const tableBody = document.querySelector('#admin-table tbody');
+            tableBody.innerHTML = ''; // Xóa nội dung cũ
+
+            adminData.forEach((customer, index) => {
+                const row = document.createElement('tr');
+
+                // STT
+                const sttCell = document.createElement('td');
+                sttCell.textContent = index + 1;
+                row.appendChild(sttCell);
+
+                // Các trường thông tin khác
+                const fields = [
+                    'request_type', 'ten_khach', 'so_giay_to', 'dia_chi_cong_ty',
+                    'muc_dich', 'so_dien_thoai', 'khu_vuc_lam_viec',
+                    'don_vi_den', 'bien_so', 'ten_lai_xe'
+                ];
+
+                fields.forEach(field => {
+                    const cell = document.createElement('td');
+                    cell.textContent = customer[field] || '';
+                    row.appendChild(cell);
+                });
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Gọi fetchAdminData mỗi 10 giây để cập nhật bảng
+        setInterval(fetchAdminData, 10000);
+
+        // Gọi lần đầu khi tải trang
+        window.onload = fetchAdminData;
+    </script>
 </body>
 </html>

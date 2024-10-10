@@ -1,3 +1,5 @@
+/* guest.css */
+
 /* Đặt lại margin và padding cho tất cả các phần tử */
 * {
     margin: 0;
@@ -11,7 +13,6 @@ body {
     background: linear-gradient(135deg, white);
     background-size: cover;
     color: black;
-    /* Xóa chiều cao cố định và overflow */
 }
 
 /* Định dạng cho header */
@@ -25,7 +26,7 @@ body {
 .home-button {
     display: inline-block;
     padding: 8px 16px;
-    background-color: #007BFF; /* Màu xanh dương */
+    background-color: #007BFF;
     color: #fff;
     text-decoration: none;
     border-radius: 5px;
@@ -34,7 +35,7 @@ body {
 
 /* Hiệu ứng hover cho nút Home */
 .home-button:hover {
-    background-color: #0056b3; /* Màu xanh đậm hơn khi hover */
+    background-color: #0056b3;
 }
 
 /* Container chính */
@@ -44,7 +45,6 @@ body {
     flex-direction: column;
     align-items: center;
     padding-top: 10px;
-    /* Xóa chiều cao cố định */
 }
 
 /* Tiêu đề chính */
@@ -58,7 +58,6 @@ h1 {
 .content {
     display: flex;
     width: 90%;
-    /* Xóa chiều cao cố định */
 }
 
 /* Phần bên trái (Form nhập liệu) */
@@ -67,7 +66,7 @@ h1 {
     padding: 10px;
     display: flex;
     flex-direction: column;
-    /* Xóa overflow */
+    justify-content: space-between; /* Đảm bảo form và nút phân chia không gian */
 }
 
 /* Phần bên phải (Hiển thị hình ảnh) */
@@ -76,31 +75,29 @@ h1 {
     padding: 10px;
     display: flex;
     flex-direction: column;
-    /* Xóa overflow */
 }
 
 /* Định dạng form */
 .left-section form {
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
-    /* Xóa overflow */
+    flex-grow: 1; /* Đảm bảo form chiếm toàn bộ không gian còn lại */
+    margin-bottom: 0; /* Đảm bảo không có khoảng cách bên dưới */
 }
 
-.left-section form > div {
-    overflow-y: auto;
-}
-
+/* Đặt các section trong form */
 .left-section .section {
     margin-bottom: 15px;
 }
 
+/* Điều chỉnh các row trong section */
 .left-section .section .row {
     display: flex;
     justify-content: space-between;
     margin-bottom: 12px;
 }
 
+/* Định dạng cho các trường nhập liệu */
 .field {
     flex: 1;
     margin-right: 10px;
@@ -116,17 +113,20 @@ label {
     font-size: 16px;
 }
 
+/* Định dạng cho dấu sao bắt buộc */
 .required {
     color: red;
     margin-left: 3px;
 }
 
+/* Định dạng cho "Loại yêu cầu" */
 .label-small {
     font-size: 18px;
     font-weight: bold;
     margin-bottom: 10px;
 }
 
+/* Định dạng cho các trường input */
 input[type="text"],
 input[type="date"] {
     width: 100%;
@@ -139,6 +139,7 @@ input[type="date"] {
     height: 36px;
 }
 
+/* Class để thu nhỏ các ô nhập liệu */
 .small-input {
     width: 100%;
     padding: 6px;
@@ -146,6 +147,7 @@ input[type="date"] {
     height: 36px;
 }
 
+/* Định dạng cho radio group */
 .radio-group {
     display: flex;
     gap: 20px;
@@ -160,16 +162,18 @@ input[type="date"] {
     font-size: 16px;
 }
 
+/* Định dạng cho tiêu đề nhỏ */
 h3 {
     margin-bottom: 10px;
     font-size: 18px;
     font-weight: bold;
 }
 
+/* Định dạng cho button */
 .button-container {
     display: flex;
     justify-content: flex-end;
-    margin-top: 1px;
+    margin-top: 20px; /* Điều chỉnh giá trị này nếu cần */
 }
 
 button {
@@ -191,6 +195,7 @@ button {
     color: #fff;
 }
 
+/* Định dạng cho thông báo thành công */
 .alert-success {
     background-color: #d4edda;
     color: #155724;
@@ -213,7 +218,7 @@ button {
     display: grid;
     grid-template-columns: 1fr 1fr; /* Hai cột */
     grid-template-rows: 1fr 1fr;    /* Hai hàng */
-    gap: 10px; /* Khoảng cách giữa các ảnh */
+    gap: 10px;
     height: calc(100vh - 150px); /* Điều chỉnh để phù hợp với màn hình */
 }
 
@@ -221,7 +226,6 @@ button {
 .image-container {
     position: relative;
     width: 100%;
-    /* Chiều cao sẽ được xác định bởi grid */
 }
 
 /* Định dạng hộp chứa ảnh */
@@ -294,7 +298,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     }
 
     .image-box {
-        height: 200px; /* Điều chỉnh nếu cần */
+        height: 200px;
     }
 
     .image-box img {

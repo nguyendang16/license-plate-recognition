@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản Lý Thông Tin Khách</title>
-    <link rel="stylesheet" href="/application/dashboard/static/guest.css">
+    <link rel="stylesheet" href="/static/guest.css">
 </head>
 <body>
     <div class="header">
@@ -14,7 +14,11 @@
     <div class="container">
         <h1>Quản Lý Thông Tin Khách</h1>
         {% if message %}
-            <div class="alert-success">{{ message }}</div>
+            {% if "thành công" in message %}
+                <div class="alert-success">{{ message }}</div>
+            {% else %}
+                <div class="alert-error">{{ message }}</div>
+            {% endif %}
         {% endif %}
         <div class="content">
             <div class="left-section">
@@ -103,7 +107,7 @@
                             </div>
                             <div class="field">
                                 <label>Biển số <span class="required">*</span></label>
-                                <input type="text" name="bien_so" class="small-input" placeholder="Nhập biển số xe" required value="{{ data.bien_so }}" {% if not is_editable %}readonly{% endif %}>
+                                <input type="text" id="bien_so" name="bien_so" class="small-input" placeholder="Nhập biển số xe" required value="{{ data.bien_so }}" {% if not is_editable %}readonly{% endif %}>
                             </div>
                         </div>
 
@@ -149,8 +153,100 @@
                         <p>THỜI GIAN 4: {{ data.thoi_gian_4 }}</p>
                     </div>
                 </div>
-            </div>            
+            </div>
         </div>
     </div>
+
+    <!-- Thêm JavaScript để tự động cập nhật thông tin -->
+    <script>
+        let isEditing = false; // Biến để theo dõi trạng thái chỉnh sửa
+
+        async function fetchGuestData() {
+            try {
+                const response = await fetch('/api/guest');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const guestData = await response.json();
+                updateFormFields(guestData);
+            } catch (error) {
+                console.error('Error fetching guest data:', error);
+            }
+        }
+
+        function updateFormFields(data) {
+            if (isEditing) {
+                return; // Nếu đang ở chế độ chỉnh sửa, không cập nhật form
+            }
+
+            const bienSoInput = document.getElementById('bien_so');
+            const previousBienSo = bienSoInput.value;
+
+            if (bienSoInput.value !== data.bien_so && data.bien_so !== "") {
+                bienSoInput.value = data.bien_so;
+            }
+
+            if (data.bien_so_valid) {
+                // Auto-fill các trường thông tin khi biển số đã đăng ký
+                const requestTypeOnce = document.querySelector('input[name="request_type"][value="once"]');
+                const requestTypeRepeat = document.querySelector('input[name="request_type"][value="repeat"]');
+
+                if (data.request_type === 'once') {
+                    requestTypeOnce.checked = true;
+                } else if (data.request_type === 'repeat') {
+                    requestTypeRepeat.checked = true;
+                }
+
+                document.getElementsByName('ngay_bat_dau')[0].value = data.ngay_bat_dau;
+                document.getElementsByName('khu_vuc_lam_viec')[0].value = data.khu_vuc_lam_viec;
+                document.getElementsByName('phong_ban')[0].value = data.phong_ban;
+                document.getElementsByName('don_vi_den')[0].value = data.don_vi_den;
+                document.getElementsByName('muc_dich')[0].value = data.muc_dich;
+                document.getElementsByName('van_ban_tham_chieu')[0].value = data.van_ban_tham_chieu;
+                document.getElementsByName('so_giay_to')[0].value = data.so_giay_to;
+                document.getElementsByName('ten_khach')[0].value = data.ten_khach;
+                document.getElementsByName('so_dien_thoai')[0].value = data.so_dien_thoai;
+                document.getElementsByName('dia_chi_cong_ty')[0].value = data.dia_chi_cong_ty;
+                document.getElementsByName('khach_dai_dien')[0].value = data.khach_dai_dien;
+                document.getElementsByName('ten_xe')[0].value = data.ten_xe;
+                document.getElementsByName('ten_lai_xe')[0].value = data.ten_lai_xe;
+            } else {
+                // Nếu biển số chưa đăng ký, chỉ cập nhật bien_so và xóa các trường khác
+                document.getElementsByName('request_type').forEach(radio => radio.checked = false);
+                document.getElementsByName('ngay_bat_dau')[0].value = "";
+                document.getElementsByName('khu_vuc_lam_viec')[0].value = "";
+                document.getElementsByName('phong_ban')[0].value = "";
+                document.getElementsByName('don_vi_den')[0].value = "";
+                document.getElementsByName('muc_dich')[0].value = "";
+                document.getElementsByName('van_ban_tham_chieu')[0].value = "";
+                document.getElementsByName('so_giay_to')[0].value = "";
+                document.getElementsByName('ten_khach')[0].value = "";
+                document.getElementsByName('so_dien_thoai')[0].value = "";
+                document.getElementsByName('dia_chi_cong_ty')[0].value = "";
+                document.getElementsByName('khach_dai_dien')[0].value = "";
+                document.getElementsByName('ten_xe')[0].value = "";
+                document.getElementsByName('ten_lai_xe')[0].value = "";
+            }
+        }
+
+        // Xử lý sự kiện khi nhấn nút "CHỈNH SỬA"
+        document.querySelector('.edit-button').addEventListener('click', function() {
+            if (this.textContent.trim() === "CHỈNH SỬA") {
+                isEditing = true;
+            }
+        });
+
+        // Xử lý sự kiện khi gửi form (ấn "XÁC NHẬN")
+        document.querySelector('form').addEventListener('submit', function(event) {
+            // Khi gửi form, kết thúc chế độ chỉnh sửa
+            isEditing = false;
+        });
+
+        // Gọi fetchGuestData mỗi 5 giây
+        setInterval(fetchGuestData, 5000);
+
+        // Gọi lần đầu khi tải trang
+        window.onload = fetchGuestData;
+    </script>
 </body>
 </html>
