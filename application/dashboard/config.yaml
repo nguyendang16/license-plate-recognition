@@ -1,6 +1,16 @@
-stream1: ""
-stream2: ""
-stream3: ""
-strean4: ""
-
-ROI1: 
+ROI1:
+- 0
+- 0
+- 640
+- 480
+ROI2:
+- 0
+- 0
+- 1280
+- 720
+ROI3: null
+ROI4: null
+stream1: 0
+stream2: rtsp://pathtech:pathtech1@192.168.1.35:554/stream1
+stream3: ''
+stream4: ''
