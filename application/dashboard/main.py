@@ -112,6 +112,8 @@ def process_frame(frame):
             # Crop khu vực biển số
             cropped_image = frame[y1:y2, x1:x2]
 
+            ##if locate in ROI => xử lý ocr
+
             # Sử dụng PaddleOCR để nhận diện văn bản trong hình ảnh cắt
             ocr_result = ocr.ocr(cropped_image, rec=True, cls=True)
             detected_objects.append((x1, y1, x2, y2, ocr_result))
@@ -224,6 +226,8 @@ def gen_frames(video_source):
                 logger.warning(f"Failed to read frame from {video_source}. Retrying in 1 second.")
                 time.sleep(1)
                 continue
+
+            ##draw ROI to frame
 
             # Submit frame để xử lý YOLO + OCR
             future = executor.submit(process_frame, frame)
