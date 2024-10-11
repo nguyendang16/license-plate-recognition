@@ -260,7 +260,7 @@ def gen_frames(video_source):
 @app.get('/video_feed1')
 async def video_feed1():
     # Thay thế RTSP URL bằng URL chính xác của bạn
-    return StreamingResponse(gen_frames('rtsp://admin:password@192.168.1.25:554/Streaming/channels/101'), media_type='multipart/x-mixed-replace; boundary=frame')
+    return StreamingResponse(gen_frames('rtsp://admin:namtiep2005@192.168.1.25:554/Streaming/channels/101'), media_type='multipart/x-mixed-replace; boundary=frame')
 
 @app.get('/video_feed2')
 async def video_feed2():
