@@ -1,88 +1,131 @@
+/* history.css */
+
+/* Đặt lại margin và padding cho tất cả các phần tử */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* Định dạng cho body */
 body {
+    display: flex;
     font-family: Arial, sans-serif;
-    background-color: #f4f6f9;
-    color: #333;
+    background-color: #ecf0f1; /* Màu nền nhẹ nhàng */
 }
 
-.container {
-    max-width: 1980px; /* Đặt max-width cho container */
-    max-height: 1020px;
-    margin: 40px auto;
-    padding: 20px;
-    background-color: #fff;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
+/* Sidebar */
+.sidebar {
+    width: 200px;
+    background-color: #2c3e50;
+    height: 100vh;
+    padding-top: 20px;
+    position: fixed;
 }
 
-/* Tiêu đề và nút Home */
-.header {
-    position: relative;
+.sidebar a {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    padding: 10px 20px;
+    text-decoration: none;
+    color: #ecf0f1;
+    font-size: 16px;
+}
+
+.sidebar a:hover {
+    background-color: #34495e;
+}
+
+.sidebar img {
+    margin-right: 10px;
+}
+
+/* Content */
+.content {
+    margin-left: 220px; /* Để không che sidebar */
+    padding: 20px;
+    width: calc(100% - 220px);
+    overflow-y: auto; /* Cho phép cuộn dọc nếu nội dung dài */
+    height: 100vh; /* Chiều cao toàn màn hình */
+}
+
+/* Tiêu đề chính */
+h1 {
+    margin-bottom: 20px;
+    color: #2c3e50;
+    text-align: center;
+}
+
+/* Alerts */
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #c3e6cb;
+    border-radius: 3px;
+    font-size: 16px;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #f5c6cb;
+    border-radius: 3px;
+    font-size: 16px;
+}
+
+/* Customer Table */
+.customer-table {
+    width: 100%;
+    border-collapse: collapse;
     margin-bottom: 20px;
 }
 
-.title {
-    flex-grow: 1;
+.customer-table th, .customer-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
     text-align: center;
-    font-size: 24px;
-    margin: 0;
 }
 
-/* Định dạng cho nút Home */
-.home-button {
-    display: inline-block;
-    padding: 8px 16px;
-    background-color: #007BFF;
+.customer-table th {
+    background-color: #34495e;
     color: white;
-    text-decoration: none;
-    border-radius: 5px;
-    font-size: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 1;
 }
 
-.home-button:hover {
-    background-color: #0056b3;
+/* Định dạng cho cột Thời gian */
+.time-cell {
+    color: red;
+    font-weight: bold;
 }
 
-/* Bảng lịch sử ra vào */
-.history-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    border: 2px solid #333;  /* Viền ngoài cho bảng */
-}
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 150px;
+    }
 
-/* Màu nền xanh lá cho tiêu đề */
-.history-table thead th {
-    background-color: #4CAF50;
-    color: white;
-    padding: 12px;
-    text-align: center;
-    font-size: 16px;
-    border-bottom: 2px solid #333;
-}
+    .sidebar a {
+        padding: 8px 15px;
+        font-size: 14px;
+    }
 
-/* Định dạng cho các ô dữ liệu */
-.history-table tbody td {
-    padding: 12px;
-    text-align: center;
-    font-size: 14px;
-    border-bottom: 1px solid #ddd;
-}
+    .content {
+        margin-left: 170px;
+        padding: 15px;
+    }
 
-/* Đường kẻ giữa các cột */
-.history-table thead th, .history-table tbody td {
-    border-right: 1px solid #ccc;
-}
+    h1 {
+        font-size: 24px;
+    }
 
-/* Đổi màu hàng khi hover */
-.history-table tbody tr:hover {
-    background-color: #f1f1f1;
+    .customer-table th, .customer-table td {
+        padding: 6px;
+        font-size: 14px;
+    }
 }

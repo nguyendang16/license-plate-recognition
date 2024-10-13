@@ -1,24 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lịch sử ra vào</title>
-    <link rel="stylesheet" href="/application/dashboard/static/history.css">
+    <title>Lịch Sử Ra Vào</title>
+    <link rel="stylesheet" href="/static/history.css">
 </head>
 <body>
-    <!-- Thêm nút Home để quay lại trang Quản lý -->
-    <div class="container">
-        <div class="header">
-            <a href="/admin" class="home-button">TRANG CHỦ</a>
-            <h1 class="title">Lịch sử ra vào</h1>
-        </div>
-        <table class="history-table">
+    <div class="sidebar">
+        <a href="/admin">
+            <img src="https://img.icons8.com/ios-filled/50/000000/admin-settings-male.png" alt="Admin Icon"/>
+            Quản lý
+        </a>
+        <a href="/guest">
+            <img src="https://img.icons8.com/ios-filled/50/000000/information.png" alt="Info Icon"/>
+            Thông tin khách
+        </a>
+        <a href="/history">
+            <img src="https://img.icons8.com/ios-filled/50/000000/time-machine.png" alt="History Icon"/>
+            Lịch sử ra vào
+        </a>
+    </div>
+
+    <div class="content">
+        <h1>Lịch Sử Ra Vào</h1>
+        {% if message %}
+            {% if "thành công" in message %}
+                <div class="alert-success">{{ message }}</div>
+            {% else %}
+                <div class="alert-error">{{ message }}</div>
+            {% endif %}
+        {% endif %}
+        
+        <table class="customer-table" id="history-table">
             <thead>
                 <tr>
+                    <th>STT</th>
                     <th>Tên khách</th>
                     <th>Biển số xe</th>
+                    <th>Tên xe</th>
                     <th>Khu vực làm việc</th>
+                    <th>Đơn vị đến</th>
                     <th>Mục đích</th>
                     <th>Ngày</th>
                     <th>Thời gian</th>
@@ -26,35 +48,72 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>Nguyễn Văn A</td>
-                    <td>30A-12345</td>
-                    <td>Phòng 101</td>
-                    <td>Họp mặt</td>
-                    <td>03-10-2024</td>
-                    <td>11:00</td>
-                    <td>Vào</td>
-                </tr>
-                <tr>
-                    <td>Nguyễn Văn A</td>
-                    <td>30A-12345</td>
-                    <td>Phòng 101</td>
-                    <td>Họp mặt</td>
-                    <td>03-10-2024</td>
-                    <td>13:00</td>
-                    <td>Ra</td>
-                </tr>
-                <tr>
-                    <td>Trần Thị B</td>
-                    <td>29B-67890</td>
-                    <td>Phòng 102</td>
-                    <td>Trao đổi dự án</td>
-                    <td>03-10-2024</td>
-                    <td>12:00</td>
-                    <td>Vào</td>
-                </tr>
+                <!-- Dữ liệu sẽ được thêm qua JavaScript -->
             </tbody>
         </table>
     </div>
+
+    <!-- Thêm JavaScript để lấy và hiển thị dữ liệu lịch sử -->
+    <script>
+        async function fetchHistoryData() {
+            try {
+                const response = await fetch('/api/history');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const historyData = await response.json();
+                populateHistoryTable(historyData);
+            } catch (error) {
+                console.error('Error fetching history data:', error);
+            }
+        }
+
+        function populateHistoryTable(historyData) {
+            const tableBody = document.querySelector('#history-table tbody');
+            tableBody.innerHTML = ''; // Xóa nội dung cũ
+
+            historyData.forEach((record, index) => {
+                const row = document.createElement('tr');
+
+                // STT
+                const sttCell = document.createElement('td');
+                sttCell.textContent = index + 1;
+                row.appendChild(sttCell);
+
+                // Các cột thông tin
+                const fields = [
+                    'ten_khach',
+                    'bien_so',
+                    'ten_xe',
+                    'khu_vuc_lam_viec',
+                    'don_vi_den',
+                    'muc_dich',
+                    'ngay',
+                    'thoi_gian',
+                    'trang_thai_ra_vao'
+                ];
+
+                fields.forEach((field) => {
+                    const cell = document.createElement('td');
+                    cell.textContent = record[field] || '';
+
+                    // Định dạng màu đỏ cho cột "Thời gian"
+                    if (field === 'thoi_gian') {
+                        cell.classList.add('time-cell');
+                    }
+
+                    row.appendChild(cell);
+                });
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Gọi fetchHistoryData mỗi 5 giây để cập nhật bảng
+        setInterval(fetchHistoryData, 5000);
+
+        // Gọi lần đầu khi tải trang
+        window.onload = fetchHistoryData;
+    </script>
 </body>
 </html>

@@ -67,6 +67,9 @@ data = {
 admin_data_lock = threading.Lock()
 admin_data = []  # Danh sách các khách hàng đã đăng ký từ Excel
 
+history_data_lock = threading.Lock()
+history_data = []
+
 # Hàm normal hóa biển số
 def normalize_license_plate(text):
     """
@@ -98,10 +101,11 @@ def update_admin_data(customer):
         logger.info(f"Thêm mới khách hàng với biển số: {customer['bien_so']}")
 
 # Hàm xử lý khung hình để phát hiện biển số và OCR
-def process_frame(frame):
+# Thay đổi định nghĩa hàm process_frame
+def process_frame(frame, camera_id):
     results = model(frame, conf=0.5, iou=0.3)
     detected_objects = []
-    
+
     for result in results:
         boxes = result.boxes
         for box in boxes:
@@ -115,14 +119,14 @@ def process_frame(frame):
             # Sử dụng PaddleOCR để nhận diện văn bản trong hình ảnh cắt
             ocr_result = ocr.ocr(cropped_image, rec=True, cls=True)
             detected_objects.append((x1, y1, x2, y2, ocr_result))
-    
-    # Nếu phát hiện biển số, cập nhật vào data
+
+    # Nếu phát hiện biển số, cập nhật vào data và history_data
     for (x1, y1, x2, y2, ocr_result) in detected_objects:
         try:
             # Kiểm tra xem OCR có nhận diện được văn bản không
             if ocr_result and len(ocr_result) > 0:
                 # Lấy văn bản từ kết quả OCR
-                detected_texts = [line[1][0] for line in ocr_result[0]]  # Lấy text từ mỗi dòng
+                detected_texts = [line[1][0] for line in ocr_result[0]]
                 raw_text = ' '.join(detected_texts).strip()
                 normalized_text = normalize_license_plate(raw_text)
                 logger.info(f"Raw OCR Text: '{raw_text}' | Normalized: '{normalized_text}'")
@@ -142,7 +146,32 @@ def process_frame(frame):
                         elif data["thoi_gian_4"] == "":
                             data["thoi_gian_4"] = current_time
                         logger.info(f"Updated bien_so to: {data['bien_so']}")
-                        
+
+                        # Xác định trạng thái ra vào dựa trên camera_id
+                        if camera_id in [1, 2]:
+                            trang_thai_ra_vao = "Vào"
+                        elif camera_id in [3, 4]:
+                            trang_thai_ra_vao = "Ra"
+                        else:
+                            trang_thai_ra_vao = "Không xác định"
+
+                        # Tạo bản ghi lịch sử
+                        history_record = {
+                            "ten_khach": data.get("ten_khach", ""),
+                            "bien_so": normalized_text,
+                            "ten_xe": data.get("ten_xe", ""),
+                            "khu_vuc_lam_viec": data.get("khu_vuc_lam_viec", ""),
+                            "don_vi_den": data.get("don_vi_den", ""),
+                            "muc_dich": data.get("muc_dich", ""),
+                            "ngay": time.strftime("%d-%m-%Y", time.localtime()),
+                            "thoi_gian": time.strftime("%H:%M:%S", time.localtime()),
+                            "trang_thai_ra_vao": trang_thai_ra_vao
+                        }
+
+                        with history_data_lock:
+                            history_data.append(history_record)
+                            logger.info(f"Added history record: {history_record}")
+
                         # Kiểm tra xem biển số có trong admin_data không
                         with admin_data_lock:
                             matched_customer = next((customer for customer in admin_data if customer['bien_so'].upper() == normalized_text), None)
@@ -185,7 +214,7 @@ def process_frame(frame):
                                 "ten_lai_xe": "",
                             })
                             data["bien_so_valid"] = False
-                            logger.warning(f"Detected license plate '{normalized_text}' is invalid (less than 6 characters) or not registered.")
+                            logger.warning(f"Detected license plate '{normalized_text}' is not registered.")
                 else:
                     with data_lock:
                         data["bien_so_valid"] = False
@@ -209,11 +238,11 @@ def process_frame(frame):
                         logger.warning(f"Detected license plate '{normalized_text}' is invalid (less than 6 characters).")
         except Exception as e:
             logger.error(f"Error processing OCR result: {e}")
-    
+
     return detected_objects
 
-# Hàm tạo luồng video với xử lý YOLO và OCR
-def gen_frames(video_source):
+# Thay đổi định nghĩa hàm gen_frames
+def gen_frames(video_source, camera_id):
     cap = cv2.VideoCapture(video_source)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)  # Đặt chiều rộng
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)  # Đặt chiều cao
@@ -226,7 +255,7 @@ def gen_frames(video_source):
                 continue
 
             # Submit frame để xử lý YOLO + OCR
-            future = executor.submit(process_frame, frame)
+            future = executor.submit(process_frame, frame, camera_id)
             detected_objects = future.result()
 
             # Vẽ khung và văn bản nhận diện trên frame
@@ -244,7 +273,7 @@ def gen_frames(video_source):
                             color = (0, 0, 255)  # Đỏ cho biển số không hợp lệ
                             text_color = (255, 255, 255)
                             display_text = "Biển số không hợp lệ"
-                        
+
                         cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
                         cv2.putText(frame, display_text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, text_color, 2)
                 except Exception as e:
@@ -259,23 +288,23 @@ def gen_frames(video_source):
 # Các route cho các luồng video
 @app.get('/video_feed1')
 async def video_feed1():
-    # Thay thế RTSP URL bằng URL chính xác của bạn
-    return StreamingResponse(gen_frames('rtsp://admin:password@192.168.1.25:554/Streaming/channels/101'), media_type='multipart/x-mixed-replace; boundary=frame')
+    # Camera 1: Vào
+    return StreamingResponse(gen_frames('rtsp://admin:password@192.168.1.25:554/Streaming/channels/101', camera_id=1), media_type='multipart/x-mixed-replace; boundary=frame')
 
 @app.get('/video_feed2')
 async def video_feed2():
-    # Thay thế RTSP URL bằng URL chính xác của bạn
-    return StreamingResponse(gen_frames('rtsp://pathtech:pathtech1@192.168.1.35:554/stream1'), media_type='multipart/x-mixed-replace; boundary=frame')
+    # Camera 2: Vào
+    return StreamingResponse(gen_frames('rtsp://pathtech:pathtech1@192.168.1.35:554/stream1', camera_id=2), media_type='multipart/x-mixed-replace; boundary=frame')
 
 @app.get('/video_feed3')
 async def video_feed3():
-    # Webcam mặc định (device 0)
-    return StreamingResponse(gen_frames(0), media_type='multipart/x-mixed-replace; boundary=frame')
+    # Camera 3: Ra
+    return StreamingResponse(gen_frames(0, camera_id=3), media_type='multipart/x-mixed-replace; boundary=frame')
 
 @app.get('/video_feed4')
 async def video_feed4():
-    # Thay thế RTSP URL bằng URL chính xác của bạn
-    return StreamingResponse(gen_frames('rtsp://rtsp_stream_url_4'), media_type='multipart/x-mixed-replace; boundary=frame')
+    # Camera 4: Ra
+    return StreamingResponse(gen_frames('rtsp://rtsp_stream_url_4', camera_id=4), media_type='multipart/x-mixed-replace; boundary=frame')
 
 # Route cho admin.html và trang chủ
 @app.get("/", response_class=HTMLResponse)
@@ -313,6 +342,11 @@ async def get_guest_data():
 async def get_admin_data():
     with admin_data_lock:
         return admin_data.copy()
+    
+@app.get("/api/history", response_class=JSONResponse)
+async def get_history():
+    with history_data_lock:
+        return history_data.copy()
 
 # Route để tải lên file Excel cho admin
 @app.post("/admin/upload", response_class=HTMLResponse)
