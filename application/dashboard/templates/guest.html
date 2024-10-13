@@ -1,10 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản Lý Thông Tin Khách</title>
     <link rel="stylesheet" href="/static/guest.css">
+    <style>
+        /* Thêm các kiểu CSS cho thông báo và nút nếu cần */
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .confirm-button {
+            background-color: red;
+            color: white;
+        }
+
+        .edit-button {
+            background-color: blue;
+            color: white;
+        }
+    </style>
 </head>
 <body>
     <div class="header">
@@ -13,22 +45,32 @@
     
     <div class="container">
         <h1>Quản Lý Thông Tin Khách</h1>
-        {% if message %}
-            {% if "thành công" in message %}
-                <div class="alert-success">{{ message }}</div>
-            {% else %}
-                <div class="alert-error">{{ message }}</div>
+        <div id="message-container">
+            {% if message %}
+                {% if "thành công" in message %}
+                    <div class="alert-success">{{ message }}</div>
+                {% else %}
+                    <div class="alert-error">{{ message }}</div>
+                {% endif %}
             {% endif %}
-        {% endif %}
+        </div>
         <div class="content">
             <div class="left-section">
-                <form method="post" action="/guest">
-                    <input type="hidden" name="action" value="{{ action }}">
+                <form id="guest-form">
+                    <input type="hidden" name="action" id="form-action" value="{{ action }}">
                     <div class="section">
                         <label class="label-small" for="request_type">Loại yêu cầu</label>
                         <div class="radio-group">
-                            <input type="radio" name="request_type" value="once" {% if data.request_type == 'once' %}checked{% endif %} {% if not is_editable %}disabled{% endif %}> Một lần
-                            <input type="radio" name="request_type" value="repeat" {% if data.request_type == 'repeat' %}checked{% endif %} {% if not is_editable %}disabled{% endif %}> Lặp lại
+                            <label>
+                                <input type="radio" name="request_type" value="once" 
+                                    {% if data.request_type == 'once' %}checked{% endif %} 
+                                    {% if not is_editable %}disabled{% endif %}> Một lần
+                            </label>
+                            <label>
+                                <input type="radio" name="request_type" value="repeat" 
+                                    {% if data.request_type == 'repeat' %}checked{% endif %} 
+                                    {% if not is_editable %}disabled{% endif %}> Lặp lại
+                            </label>
                         </div>
 
                         <h3>Thông tin chung</h3>
@@ -121,7 +163,7 @@
 
                     <div class="button-container">
                         <button type="button" class="open-button">MỞ CỔNG</button>
-                        <button type="submit" class="edit-button">{{ button_text }}</button>
+                        <button type="button" id="edit-confirm-button" class="edit-button">CHỈNH SỬA</button>
                     </div>
                 </form>
             </div>
@@ -157,7 +199,7 @@
         </div>
     </div>
 
-    <!-- Thêm JavaScript để tự động cập nhật thông tin -->
+    <!-- Thêm JavaScript để xử lý AJAX Form Submission và quản lý trạng thái chỉnh sửa -->
     <script>
         let isEditing = false; // Biến để theo dõi trạng thái chỉnh sửa
 
@@ -212,7 +254,7 @@
                 document.getElementsByName('ten_lai_xe')[0].value = data.ten_lai_xe;
             } else {
                 // Nếu biển số chưa đăng ký, chỉ cập nhật bien_so và xóa các trường khác
-                document.getElementsByName('request_type').forEach(radio => radio.checked = false);
+                document.querySelectorAll('input[name="request_type"]').forEach(radio => radio.checked = false);
                 document.getElementsByName('ngay_bat_dau')[0].value = "";
                 document.getElementsByName('khu_vuc_lam_viec')[0].value = "";
                 document.getElementsByName('phong_ban')[0].value = "";
@@ -229,18 +271,105 @@
             }
         }
 
-        // Xử lý sự kiện khi nhấn nút "CHỈNH SỬA"
-        document.querySelector('.edit-button').addEventListener('click', function() {
-            if (this.textContent.trim() === "CHỈNH SỬA") {
+        // Xử lý sự kiện khi nhấn nút "CHỈNH SỬA" hoặc "XÁC NHẬN"
+        document.getElementById('edit-confirm-button').addEventListener('click', function(event) {
+            event.preventDefault(); // Ngăn chặn hành vi mặc định của form
+
+            if (!isEditing) {
+                // Chuyển sang chế độ chỉnh sửa
                 isEditing = true;
+                this.textContent = "XÁC NHẬN";
+                this.classList.remove('edit-button');
+                this.classList.add('confirm-button');
+
+                // Cập nhật trường action thành "confirm"
+                document.getElementById('form-action').value = "confirm";
+
+                // Enable form fields for editing
+                const inputs = document.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    input.removeAttribute('readonly');
+                    input.removeAttribute('disabled');
+                });
+
+                // Enable radio buttons
+                document.querySelectorAll('input[name="request_type"]').forEach(radio => {
+                    radio.removeAttribute('disabled');
+                });
+            } else {
+                // Đang ở chế độ xác nhận, gửi form qua AJAX
+                const form = document.getElementById('guest-form');
+                const formData = new FormData(form);
+
+                fetch('/guest', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(dataResponse => {
+                    if (dataResponse.status === "success") {
+                        displayMessage(dataResponse.message, true);
+                    } else {
+                        displayMessage(dataResponse.message, false);
+                    }
+
+                    // Cập nhật form fields với dữ liệu mới
+                    updateFormFields(dataResponse.data);
+
+                    // Chuyển lại nút thành "CHỈNH SỬA"
+                    isEditing = false;
+                    const button = document.getElementById('edit-confirm-button');
+                    button.textContent = "CHỈNH SỬA";
+                    button.classList.remove('confirm-button');
+                    button.classList.add('edit-button');
+
+                    // Reset trường action thành "edit"
+                    document.getElementById('form-action').value = "edit";
+
+                    // Disable form fields
+                    const inputs = document.querySelectorAll('input, select, textarea');
+                    inputs.forEach(input => {
+                        if (input.type !== 'radio') { // Radio buttons sẽ được xử lý riêng
+                            input.setAttribute('readonly', true);
+                            input.setAttribute('disabled', true);
+                        }
+                    });
+
+                    // Disable radio buttons if bien_so_valid is True
+                    if (dataResponse.data.bien_so_valid) {
+                        document.querySelectorAll('input[name="request_type"]').forEach(radio => {
+                            radio.setAttribute('disabled', true);
+                        });
+                    } else {
+                        document.querySelectorAll('input[name="request_type"]').forEach(radio => {
+                            radio.removeAttribute('disabled');
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error submitting form:', error);
+                    displayMessage("Có lỗi xảy ra khi lưu thông tin.", false);
+                });
             }
         });
 
-        // Xử lý sự kiện khi gửi form (ấn "XÁC NHẬN")
-        document.querySelector('form').addEventListener('submit', function(event) {
-            // Khi gửi form, kết thúc chế độ chỉnh sửa
-            isEditing = false;
-        });
+        // Hàm hiển thị thông báo
+        function displayMessage(message, isSuccess) {
+            const alertContainer = document.getElementById('message-container');
+            // Xóa bất kỳ thông báo hiện tại nào
+            const existingAlert = alertContainer.querySelector('.alert-success, .alert-error');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+
+            // Tạo phần tử thông báo mới
+            const alertDiv = document.createElement('div');
+            alertDiv.className = isSuccess ? 'alert-success' : 'alert-error';
+            alertDiv.textContent = message;
+
+            // Thêm vào container
+            alertContainer.appendChild(alertDiv);
+        }
 
         // Gọi fetchGuestData mỗi 5 giây
         setInterval(fetchGuestData, 5000);

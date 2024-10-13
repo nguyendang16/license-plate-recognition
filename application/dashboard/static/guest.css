@@ -190,6 +190,11 @@ button {
     color: #fff;
 }
 
+.confirm-button {
+    background-color: #28a745;
+    color: white;
+}
+
 .open-button {
     background-color: green;
     color: #fff;

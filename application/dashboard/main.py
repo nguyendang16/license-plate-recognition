@@ -112,8 +112,6 @@ def process_frame(frame):
             # Crop khu vực biển số
             cropped_image = frame[y1:y2, x1:x2]
 
-            ##if locate in ROI => xử lý ocr
-
             # Sử dụng PaddleOCR để nhận diện văn bản trong hình ảnh cắt
             ocr_result = ocr.ocr(cropped_image, rec=True, cls=True)
             detected_objects.append((x1, y1, x2, y2, ocr_result))
@@ -227,8 +225,6 @@ def gen_frames(video_source):
                 time.sleep(1)
                 continue
 
-            ##draw ROI to frame
-
             # Submit frame để xử lý YOLO + OCR
             future = executor.submit(process_frame, frame)
             detected_objects = future.result()
@@ -264,7 +260,7 @@ def gen_frames(video_source):
 @app.get('/video_feed1')
 async def video_feed1():
     # Thay thế RTSP URL bằng URL chính xác của bạn
-    return StreamingResponse(gen_frames('rtsp://admin:namtiep2005@192.168.1.25:554/Streaming/channels/101'), media_type='multipart/x-mixed-replace; boundary=frame')
+    return StreamingResponse(gen_frames('rtsp://admin:password@192.168.1.25:554/Streaming/channels/101'), media_type='multipart/x-mixed-replace; boundary=frame')
 
 @app.get('/video_feed2')
 async def video_feed2():
@@ -393,7 +389,7 @@ async def download_admin_data():
         )
 
 # Xử lý POST request cho guest.html
-@app.post("/guest", response_class=HTMLResponse)
+@app.post("/guest", response_class=JSONResponse)
 async def submit_guest(
     request: Request,
     action: str = Form(...),
@@ -417,11 +413,8 @@ async def submit_guest(
         # Chuyển sang chế độ chỉnh sửa
         with data_lock:
             current_data = data.copy()
-        return templates.TemplateResponse("guest.html", {
-            "request": request,
-            "is_editable": True,
-            "button_text": "XÁC NHẬN",
-            "action": "confirm",
+        return JSONResponse({
+            "status": "edit",
             "data": current_data,
             "message": None
         })
@@ -478,25 +471,25 @@ async def submit_guest(
                     }
                     update_admin_data(updated_customer)
                 else:
-                    # Biển số chưa đăng ký, chỉ cập nhật bien_so và đặt các trường khác về trống
-                    data.update({
-                        "request_type": "",
-                        "ngay_bat_dau": "",
-                        "khu_vuc_lam_viec": "",
-                        "phong_ban": "",
-                        "don_vi_den": "",
-                        "muc_dich": "",
-                        "van_ban_tham_chieu": "",
-                        "so_giay_to": "",
-                        "ten_khach": "",
-                        "so_dien_thoai": "",
-                        "dia_chi_cong_ty": "",
-                        "khach_dai_dien": "",
-                        "ten_xe": "",
-                        "ten_lai_xe": "",
-                    })
-                    data["bien_so_valid"] = False
-                    logger.warning(f"Confirmed bien_so '{normalized_bien_so}' is invalid (less than 6 characters) or not registered.")
+                    # Biển số chưa đăng ký, thêm mới vào admin_data
+                    new_customer = {
+                        "request_type": data.get("request_type", ""),
+                        "ngay_bat_dau": data.get("ngay_bat_dau", ""),
+                        "khu_vuc_lam_viec": data.get("khu_vuc_lam_viec", ""),
+                        "phong_ban": data.get("phong_ban", ""),
+                        "don_vi_den": data.get("don_vi_den", ""),
+                        "muc_dich": data.get("muc_dich", ""),
+                        "van_ban_tham_chieu": data.get("van_ban_tham_chieu", ""),
+                        "so_giay_to": data.get("so_giay_to", ""),
+                        "ten_khach": data.get("ten_khach", ""),
+                        "so_dien_thoai": data.get("so_dien_thoai", ""),
+                        "dia_chi_cong_ty": data.get("dia_chi_cong_ty", ""),
+                        "khach_dai_dien": data.get("khach_dai_dien", ""),
+                        "ten_xe": data.get("ten_xe", ""),
+                        "bien_so": data.get("bien_so", ""),
+                        "ten_lai_xe": data.get("ten_lai_xe", ""),
+                    }
+                    update_admin_data(new_customer)
             else:
                 data["bien_so_valid"] = False
                 # Khi biển số không hợp lệ và không tồn tại trong admin_data, chỉ cập nhật bien_so và đặt các trường khác về trống
@@ -518,21 +511,16 @@ async def submit_guest(
                 })
                 logger.warning(f"Confirmed bien_so '{normalized_bien_so}' is invalid (less than 6 characters).")
         
-        # Trả về chế độ read-only với thông báo thành công hoặc cảnh báo
+        # Trả về thông báo thành công hoặc cảnh báo
         with data_lock:
             current_data = data.copy()
         if current_data["bien_so_valid"]:
             message = "Đã lưu thông tin thành công!"
         else:
-            message = "Biển số không hợp lệ! Vui lòng kiểm tra lại."
-        return templates.TemplateResponse("guest.html", {
-            "request": request,
-            "is_editable": not current_data["bien_so_valid"],
-            "button_text": "CHỈNH SỬA",
-            "action": "edit",
-            "data": current_data,
-            "message": message
+            message = "Thông tin không hợp lệ! Vui lòng kiểm tra lại."
+        
+        return JSONResponse({
+            "status": "success" if current_data["bien_so_valid"] else "error",
+            "message": message,
+            "data": current_data
         })
-
-# Khởi chạy ứng dụng với Uvicorn (chạy từ terminal với lệnh sau)
-# uvicorn main:app --reload

@@ -31,7 +31,11 @@
                 <div class="alert-error">{{ message }}</div>
             {% endif %}
         {% endif %}
-
+        
+        <div class="refresh-button">
+            <button onclick="fetchAdminData()">Tải Lại Dữ Liệu</button>
+        </div>
+        
         <div class="upload-section">
             <form action="/admin/upload" method="post" enctype="multipart/form-data">
                 <input type="file" name="file" accept=".xlsx, .xls" required>
@@ -110,7 +114,7 @@
         }
 
         // Gọi fetchAdminData mỗi 10 giây để cập nhật bảng
-        setInterval(fetchAdminData, 10000);
+        setInterval(fetchAdminData, 2000);
 
         // Gọi lần đầu khi tải trang
         window.onload = fetchAdminData;
