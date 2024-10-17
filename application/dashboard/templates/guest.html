@@ -174,25 +174,25 @@
                         <div class="image-box">
                             <img id="image1" src="{{ data.image1_url }}" alt="Ảnh 1">
                         </div>
-                        <p>THỜI GIAN 1: {{ data.thoi_gian_1 }}</p>
+                        <p>THỜI GIAN 1: <span id="thoi_gian_1" style="color: red; font-weight: bold;">{{ data.thoi_gian_1 }}</span></p>
                     </div>
                     <div class="image-container">
                         <div class="image-box">
                             <img id="image2" src="{{ data.image2_url }}" alt="Ảnh 2">
                         </div>
-                        <p>THỜI GIAN 2: {{ data.thoi_gian_2 }}</p>
+                        <p>THỜI GIAN 2: <span id="thoi_gian_2" style="color: red; font-weight: bold;">{{ data.thoi_gian_2 }}</span></p>
                     </div>
                     <div class="image-container">
                         <div class="image-box">
                             <img id="image3" src="{{ data.image3_url }}" alt="Ảnh 3">
                         </div>
-                        <p>THỜI GIAN 3: {{ data.thoi_gian_3 }}</p>
+                        <p>THỜI GIAN 3: <span id="thoi_gian_3" style="color: red; font-weight: bold;">{{ data.thoi_gian_3 }}</span></p>
                     </div>
                     <div class="image-container">
                         <div class="image-box">
                             <img id="image4" src="{{ data.image4_url }}" alt="Ảnh 4">
                         </div>
-                        <p>THỜI GIAN 4: {{ data.thoi_gian_4 }}</p>
+                        <p>THỜI GIAN 4: <span id="thoi_gian_4" style="color: red; font-weight: bold;">{{ data.thoi_gian_4 }}</span></p>
                     </div>
                 </div>
             </div>
@@ -203,7 +203,12 @@
     <script>
         let isEditing = false; // Biến để theo dõi trạng thái chỉnh sửa
 
+        // Hàm lấy dữ liệu từ backend
         async function fetchGuestData() {
+            if (isEditing) {
+                // Nếu đang ở chế độ chỉnh sửa, không cập nhật dữ liệu
+                return;
+            }
             try {
                 const response = await fetch('/api/guest');
                 if (!response.ok) {
@@ -211,9 +216,18 @@
                 }
                 const guestData = await response.json();
                 updateFormFields(guestData);
+                updateGuestUI(guestData);
             } catch (error) {
                 console.error('Error fetching guest data:', error);
             }
+        }
+
+        function updateGuestUI(data) {
+            // Cập nhật các ô thời gian
+            document.getElementById('thoi_gian_1').textContent = data.thoi_gian_1 || '';
+            document.getElementById('thoi_gian_2').textContent = data.thoi_gian_2 || '';
+            document.getElementById('thoi_gian_3').textContent = data.thoi_gian_3 || '';
+            document.getElementById('thoi_gian_4').textContent = data.thoi_gian_4 || '';
         }
 
         function updateFormFields(data) {
@@ -371,8 +385,8 @@
             alertContainer.appendChild(alertDiv);
         }
 
-        // Gọi fetchGuestData mỗi 5 giây
-        setInterval(fetchGuestData, 5000);
+        // Gọi fetchGuestData mỗi 1 giây
+        setInterval(fetchGuestData, 1000);
 
         // Gọi lần đầu khi tải trang
         window.onload = fetchGuestData;

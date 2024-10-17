@@ -246,6 +246,11 @@ button {
     object-fit: cover;
 }
 
+.time-text {
+    color: red;
+    font-weight: bold;
+}
+
 /* Định dạng chú thích ảnh */
 .image-container p {
     position: absolute;

@@ -70,6 +70,16 @@ admin_data = []  # Danh sách các khách hàng đã đăng ký từ Excel
 history_data_lock = threading.Lock()
 history_data = []
 
+camera_last_detection_time = {
+    1: None,  # Camera 1: Vào
+    2: None,  # Camera 2: Vào
+    3: None,  # Camera 3: Ra
+    4: None   # Camera 4: Ra
+}
+
+# Thời gian cooldown (giây) để tránh ghi nhiều lần cho cùng một sự kiện
+DETECTION_COOLDOWN = 5
+
 # Hàm normal hóa biển số
 def normalize_license_plate(text):
     """
@@ -101,7 +111,7 @@ def update_admin_data(customer):
         logger.info(f"Thêm mới khách hàng với biển số: {customer['bien_so']}")
 
 # Hàm xử lý khung hình để phát hiện biển số và OCR
-# Thay đổi định nghĩa hàm process_frame
+# Chỉnh sửa định nghĩa hàm process_frame
 def process_frame(frame, camera_id):
     results = model(frame, conf=0.5, iou=0.3)
     detected_objects = []
@@ -132,20 +142,24 @@ def process_frame(frame, camera_id):
                 logger.info(f"Raw OCR Text: '{raw_text}' | Normalized: '{normalized_text}'")
 
                 if is_valid_license_plate(normalized_text):
+                    current_time = time.time()  # Thời gian hiện tại (giây kể từ epoch)
+
                     with data_lock:
+                        # Kiểm tra cooldown
+                        last_detection = camera_last_detection_time.get(camera_id)
+                        if last_detection and (current_time - last_detection) < DETECTION_COOLDOWN:
+                            logger.info(f"Cooldown active for camera {camera_id}. Skipping detection.")
+                            continue  # Bỏ qua nếu chưa đủ thời gian cooldown
+
+                        # Cập nhật biển số và trạng thái hợp lệ
                         data["bien_so"] = normalized_text
                         data["bien_so_valid"] = True
-                        # Cập nhật thời gian nhận diện biển số
-                        current_time = time.strftime("%H:%M:%S %d-%m-%Y", time.localtime())
-                        if data["thoi_gian_1"] == "":
-                            data["thoi_gian_1"] = current_time
-                        elif data["thoi_gian_2"] == "":
-                            data["thoi_gian_2"] = current_time
-                        elif data["thoi_gian_3"] == "":
-                            data["thoi_gian_3"] = current_time
-                        elif data["thoi_gian_4"] == "":
-                            data["thoi_gian_4"] = current_time
-                        logger.info(f"Updated bien_so to: {data['bien_so']}")
+
+                        # Cập nhật thời gian nhận diện trong data tương ứng với camera
+                        time_field = f"thoi_gian_{camera_id}"
+                        formatted_time = time.strftime("%H:%M:%S %d-%m-%Y", time.localtime())
+                        data[time_field] = formatted_time
+                        logger.info(f"Updated {time_field} to: {formatted_time}")
 
                         # Xác định trạng thái ra vào dựa trên camera_id
                         if camera_id in [1, 2]:
@@ -171,6 +185,9 @@ def process_frame(frame, camera_id):
                         with history_data_lock:
                             history_data.append(history_record)
                             logger.info(f"Added history record: {history_record}")
+
+                        # Cập nhật thời gian phát hiện cuối cùng cho camera
+                        camera_last_detection_time[camera_id] = current_time
 
                         # Kiểm tra xem biển số có trong admin_data không
                         with admin_data_lock:
@@ -266,11 +283,11 @@ def gen_frames(video_source, camera_id):
                     normalized_text = normalize_license_plate(raw_text)
                     if normalized_text:
                         if is_valid_license_plate(normalized_text):
-                            color = (0, 255, 0)  # Xanh lá cho biển số hợp lệ
+                            color = (0, 255, 0) 
                             text_color = (0, 0, 255)
                             display_text = normalized_text
                         else:
-                            color = (0, 0, 255)  # Đỏ cho biển số không hợp lệ
+                            color = (0, 0, 255)  
                             text_color = (255, 255, 255)
                             display_text = "Biển số không hợp lệ"
 
@@ -289,7 +306,7 @@ def gen_frames(video_source, camera_id):
 @app.get('/video_feed1')
 async def video_feed1():
     # Camera 1: Vào
-    return StreamingResponse(gen_frames('rtsp://admin:password@192.168.1.25:554/Streaming/channels/101', camera_id=1), media_type='multipart/x-mixed-replace; boundary=frame')
+    return StreamingResponse(gen_frames('rtsp://admin:namtiep2005@192.168.1.25:554/Streaming/channels/101', camera_id=1), media_type='multipart/x-mixed-replace; boundary=frame')
 
 @app.get('/video_feed2')
 async def video_feed2():
