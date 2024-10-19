@@ -1,0 +1,9 @@
+fastapi
+starlette
+jinja2
+opencv-python
+ultralytics
+paddleocr
+pandas
+paddlepaddle
+openpyxl

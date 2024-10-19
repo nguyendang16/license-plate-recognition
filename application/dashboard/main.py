@@ -28,8 +28,7 @@ templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Load the YOLO model
-# Hãy chắc chắn rằng đường dẫn đến mô hình YOLO là chính xác
-model = YOLO('models/plate_new.pt')  # Thay thế bằng đường dẫn đúng đến mô hình YOLO của bạn
+model = YOLO('models/plate_new.pt')  
 
 # Initialize PaddleOCR
 ocr = PaddleOCR(use_angle_cls=True, lang='en')
@@ -111,7 +110,6 @@ def update_admin_data(customer):
         logger.info(f"Thêm mới khách hàng với biển số: {customer['bien_so']}")
 
 # Hàm xử lý khung hình để phát hiện biển số và OCR
-# Chỉnh sửa định nghĩa hàm process_frame
 def process_frame(frame, camera_id):
     results = model(frame, conf=0.5, iou=0.3)
     detected_objects = []
@@ -261,8 +259,8 @@ def process_frame(frame, camera_id):
 # Thay đổi định nghĩa hàm gen_frames
 def gen_frames(video_source, camera_id):
     cap = cv2.VideoCapture(video_source)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)  # Đặt chiều rộng
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)  # Đặt chiều cao
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)  
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720) 
     with ThreadPoolExecutor(max_workers=2) as executor:
         while True:
             success, frame = cap.read()
