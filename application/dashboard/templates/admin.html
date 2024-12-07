@@ -3,73 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel</title>
+    <title>Administration Panel</title>
     <link rel="stylesheet" href="/static/admin.css">
 </head>
 <body>
     <div class="sidebar">
         <a href="/admin">
             <img src="https://img.icons8.com/ios-filled/50/000000/admin-settings-male.png" alt="Admin Icon"/>
-            Quản lý
+            Administration
         </a>
         <a href="/guest">
             <img src="https://img.icons8.com/ios-filled/50/000000/information.png" alt="Info Icon"/>
-            Thông tin khách
+            Guest Info
         </a>
         <a href="/history">
             <img src="https://img.icons8.com/ios-filled/50/000000/time-machine.png" alt="History Icon"/>
-            Lịch sử ra vào
+            Entry/Exit History
         </a>
     </div>
 
     <div class="content">
-        <h1>Quản lý khách tới văn phòng</h1>
+        <h1>Manage Visitors to the Office</h1>
         {% if message %}
-            {% if "thành công" in message %}
+            {% if "successfully" in message|lower %}
                 <div class="alert-success">{{ message }}</div>
             {% else %}
                 <div class="alert-error">{{ message }}</div>
             {% endif %}
         {% endif %}
         
-        <!-- <div class="refresh-button">
-            <button onclick="fetchAdminData()">Tải Lại Dữ Liệu</button>
-        </div> -->
-        
         <div class="upload-section">
             <form action="/admin/upload" method="post" enctype="multipart/form-data">
                 <input type="file" name="file" accept=".xlsx, .xls" required>
-                <button type="submit">Tải Lên Excel</button>
+                <button type="submit">Upload Excel</button>
             </form>
         </div>
 
         <div class="download-button">
-            <a href="/admin/download">Tải Xuống Excel</a>
+            <a href="/admin/download">Download Excel</a>
         </div>
 
         <table class="customer-table" id="admin-table">
             <thead>
                 <tr>
-                    <th>STT</th>
-                    <th>Loại yêu cầu</th>
-                    <th>Tên khách</th>
-                    <th>Số giấy tờ</th>
-                    <th>Địa chỉ/Công ty</th>
-                    <th>Mục đích</th>
-                    <th>Số điện thoại</th>
-                    <th>Khu vực làm việc</th>
-                    <th>Đơn vị đến</th>
-                    <th>Biển số</th>
-                    <th>Tên lái xe</th>
+                    <th>No.</th>
+                    <th>Request Type</th>
+                    <th>Guest Name</th>
+                    <th>ID Number</th>
+                    <th>Company Address</th>
+                    <th>Purpose</th>
+                    <th>Phone Number</th>
+                    <th>Work Area</th>
+                    <th>Visiting Unit</th>
+                    <th>License Plate</th>
+                    <th>Driver Name</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Dữ liệu sẽ được thêm qua JavaScript -->
+                <!-- Data will be populated via JavaScript -->
             </tbody>
         </table>
     </div>
 
-    <!-- Thêm JavaScript để lấy và hiển thị dữ liệu admin -->
     <script>
         async function fetchAdminData() {
             try {
@@ -86,22 +81,22 @@
 
         function populateAdminTable(adminData) {
             const tableBody = document.querySelector('#admin-table tbody');
-            tableBody.innerHTML = ''; // Xóa nội dung cũ
+            tableBody.innerHTML = ''; 
+
+            // Update fields to English keys
+            const fields = [
+                'request_type', 'guest_name', 'id_number', 'company_address',
+                'purpose', 'phone_number', 'work_area',
+                'visiting_unit', 'license_plate', 'driver_name'
+            ];
 
             adminData.forEach((customer, index) => {
                 const row = document.createElement('tr');
 
-                // STT
+                // No.
                 const sttCell = document.createElement('td');
                 sttCell.textContent = index + 1;
                 row.appendChild(sttCell);
-
-                // Các trường thông tin khác
-                const fields = [
-                    'request_type', 'ten_khach', 'so_giay_to', 'dia_chi_cong_ty',
-                    'muc_dich', 'so_dien_thoai', 'khu_vuc_lam_viec',
-                    'don_vi_den', 'bien_so', 'ten_lai_xe'
-                ];
 
                 fields.forEach(field => {
                     const cell = document.createElement('td');
@@ -113,10 +108,10 @@
             });
         }
 
-        // Gọi fetchAdminData mỗi 10 giây để cập nhật bảng
+        // Fetch admin data every 2 seconds
         setInterval(fetchAdminData, 2000);
 
-        // Gọi lần đầu khi tải trang
+        // Initial call
         window.onload = fetchAdminData;
     </script>
 </body>

@@ -14,11 +14,11 @@ import io
 import logging
 import re
 
-# Cấu hình logging để theo dõi ứng dụng
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Đảm bảo rằng OpenCV không gặp lỗi liên quan đến thư viện
+# Ensure OpenCV does not encounter duplicate library errors
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 app = FastAPI()
@@ -33,83 +33,83 @@ model = YOLO('models/plate_new.pt')
 # Initialize PaddleOCR
 ocr = PaddleOCR(use_angle_cls=True, lang='en')
 
-# In-memory data store (thay thế bằng cơ sở dữ liệu trong môi trường production)
+# In-memory data store (replace with a database in production)
 data_lock = threading.Lock()
 data = {
     "request_type": "",
-    "ngay_bat_dau": "",
-    "khu_vuc_lam_viec": "",
-    "phong_ban": "",
-    "don_vi_den": "",
-    "muc_dich": "",
-    "van_ban_tham_chieu": "",
-    "so_giay_to": "",
-    "ten_khach": "",
-    "so_dien_thoai": "",
-    "dia_chi_cong_ty": "",
-    "khach_dai_dien": "",
-    "ten_xe": "",
-    "bien_so": "",
-    "bien_so_valid": False,  # Thêm trường để xác định tính hợp lệ của biển số
-    "ten_lai_xe": "",
+    "start_date": "",
+    "work_area": "",
+    "department": "",
+    "visiting_unit": "",
+    "purpose": "",
+    "reference_document": "",
+    "id_number": "",
+    "guest_name": "",
+    "phone_number": "",
+    "company_address": "",
+    "representative_guest": "",
+    "car_name": "",
+    "license_plate": "",
+    "license_plate_valid": False,
+    "driver_name": "",
     "image1_url": "/video_feed1",
     "image2_url": "/video_feed2",
     "image3_url": "/video_feed3",
     "image4_url": "/video_feed4",
-    "thoi_gian_1": "",
-    "thoi_gian_2": "",
-    "thoi_gian_3": "",
-    "thoi_gian_4": "",
+    "time_1": "",
+    "time_2": "",
+    "time_3": "",
+    "time_4": "",
 }
 
 # Admin data store
 admin_data_lock = threading.Lock()
-admin_data = []  # Danh sách các khách hàng đã đăng ký từ Excel
+admin_data = []  # List of customers registered from Excel
 
 history_data_lock = threading.Lock()
 history_data = []
 
 camera_last_detection_time = {
-    1: None,  # Camera 1: Vào
-    2: None,  # Camera 2: Vào
-    3: None,  # Camera 3: Ra
-    4: None   # Camera 4: Ra
+    1: None,  # Camera 1: Entry
+    2: None,  # Camera 2: Entry
+    3: None,  # Camera 3: Exit
+    4: None   # Camera 4: Exit
 }
 
-# Thời gian cooldown (giây) để tránh ghi nhiều lần cho cùng một sự kiện
+# Cooldown time (in seconds) to avoid multiple records for the same event
 DETECTION_COOLDOWN = 5
 
-# Hàm normal hóa biển số
+# Normalize license plate
 def normalize_license_plate(text):
     """
-    Loại bỏ các dấu '-', '.', và khoảng cách từ biển số.
-    Ví dụ: '99-H7 7060' -> '99H77060'
+    Remove '-', '.' and spaces from the plate.
+    Example: '99-H7 7060' -> '99H77060'
     """
-    # Sử dụng regex để loại bỏ các ký tự không phải chữ cái hoặc số
+    # Use regex to remove non-alphanumeric characters
     normalized = re.sub(r'[^A-Za-z0-9]', '', text)
     return normalized.upper()
 
-# Hàm xác thực biển số
+# Validate license plate
 def is_valid_license_plate(plate):
     return len(plate) >= 6
 
-# Hàm cập nhật hoặc thêm mới dữ liệu vào admin_data
+# Update or add a new customer entry in admin_data
 def update_admin_data(customer):
     """
-    Cập nhật thông tin khách hàng trong admin_data nếu biển số đã tồn tại.
-    Nếu không, thêm mới khách hàng vào admin_data.
+    Update customer info in admin_data if the license plate already exists.
+    If not, add a new customer entry.
     """
     with admin_data_lock:
         for idx, existing_customer in enumerate(admin_data):
-            if existing_customer['bien_so'].upper() == customer['bien_so'].upper():
+            if existing_customer['license_plate'].upper() == customer['license_plate'].upper():
                 admin_data[idx] = customer
-                logger.info(f"Cập nhật thông tin khách hàng với biển số: {customer['bien_so']}")
+                logger.info(f"Updated customer info with license plate: {customer['license_plate']}")
                 return
-        # Nếu không tìm thấy, thêm mới
+        # If not found, add new
         admin_data.append(customer)
-        logger.info(f"Thêm mới khách hàng với biển số: {customer['bien_so']}")
+        logger.info(f"Added new customer with license plate: {customer['license_plate']}")
 
-# Hàm xử lý khung hình để phát hiện biển số và OCR
+# Process frames to detect license plates and OCR
 def process_frame(frame, camera_id):
     results = model(frame, conf=0.5, iou=0.3)
     detected_objects = []
@@ -121,134 +121,133 @@ def process_frame(frame, camera_id):
             confidence = box.conf[0]
             label = box.cls[0]
 
-            # Crop khu vực biển số
             cropped_image = frame[y1:y2, x1:x2]
 
-            # Sử dụng PaddleOCR để nhận diện văn bản trong hình ảnh cắt
+            # Use PaddleOCR to recognize text in the cropped image
             ocr_result = ocr.ocr(cropped_image, rec=True, cls=True)
             detected_objects.append((x1, y1, x2, y2, ocr_result))
 
-    # Nếu phát hiện biển số, cập nhật vào data và history_data
+    # If a license plate is detected, update data and history_data
     for (x1, y1, x2, y2, ocr_result) in detected_objects:
         try:
-            # Kiểm tra xem OCR có nhận diện được văn bản không
+            # Check if OCR recognized any text
             if ocr_result and len(ocr_result) > 0:
-                # Lấy văn bản từ kết quả OCR
+                # Extract text from OCR result
                 detected_texts = [line[1][0] for line in ocr_result[0]]
                 raw_text = ' '.join(detected_texts).strip()
                 normalized_text = normalize_license_plate(raw_text)
                 logger.info(f"Raw OCR Text: '{raw_text}' | Normalized: '{normalized_text}'")
 
                 if is_valid_license_plate(normalized_text):
-                    current_time = time.time()  # Thời gian hiện tại (giây kể từ epoch)
+                    current_time = time.time()  # Current timestamp in seconds
 
                     with data_lock:
-                        # Kiểm tra cooldown
+                        # Check cooldown
                         last_detection = camera_last_detection_time.get(camera_id)
                         if last_detection and (current_time - last_detection) < DETECTION_COOLDOWN:
                             logger.info(f"Cooldown active for camera {camera_id}. Skipping detection.")
-                            continue  # Bỏ qua nếu chưa đủ thời gian cooldown
+                            continue  # Skip if still in cooldown
 
-                        # Cập nhật biển số và trạng thái hợp lệ
-                        data["bien_so"] = normalized_text
-                        data["bien_so_valid"] = True
+                        # Update license plate and its validity
+                        data["license_plate"] = normalized_text
+                        data["license_plate_valid"] = True
 
-                        # Cập nhật thời gian nhận diện trong data tương ứng với camera
-                        time_field = f"thoi_gian_{camera_id}"
+                        # Update detection time in data according to camera
+                        time_field = f"time_{camera_id}"
                         formatted_time = time.strftime("%H:%M:%S %d-%m-%Y", time.localtime())
                         data[time_field] = formatted_time
                         logger.info(f"Updated {time_field} to: {formatted_time}")
 
-                        # Xác định trạng thái ra vào dựa trên camera_id
+                        # Determine entry/exit status based on camera_id
                         if camera_id in [1, 2]:
-                            trang_thai_ra_vao = "Vào"
+                            in_out_status = "Entry"
                         elif camera_id in [3, 4]:
-                            trang_thai_ra_vao = "Ra"
+                            in_out_status = "Exit"
                         else:
-                            trang_thai_ra_vao = "Không xác định"
+                            in_out_status = "Undefined"
 
-                        # Tạo bản ghi lịch sử
+                        # Create history record
                         history_record = {
-                            "ten_khach": data.get("ten_khach", ""),
-                            "bien_so": normalized_text,
-                            "ten_xe": data.get("ten_xe", ""),
-                            "khu_vuc_lam_viec": data.get("khu_vuc_lam_viec", ""),
-                            "don_vi_den": data.get("don_vi_den", ""),
-                            "muc_dich": data.get("muc_dich", ""),
-                            "ngay": time.strftime("%d-%m-%Y", time.localtime()),
-                            "thoi_gian": time.strftime("%H:%M:%S", time.localtime()),
-                            "trang_thai_ra_vao": trang_thai_ra_vao
+                            "guest_name": data.get("guest_name", ""),
+                            "license_plate": normalized_text,
+                            "car_name": data.get("car_name", ""),
+                            "work_area": data.get("work_area", ""),
+                            "visiting_unit": data.get("visiting_unit", ""),
+                            "purpose": data.get("purpose", ""),
+                            "date": time.strftime("%d-%m-%Y", time.localtime()),
+                            "time": time.strftime("%H:%M:%S", time.localtime()),
+                            "in_out_status": in_out_status
                         }
 
                         with history_data_lock:
                             history_data.append(history_record)
                             logger.info(f"Added history record: {history_record}")
 
-                        # Cập nhật thời gian phát hiện cuối cùng cho camera
+                        # Update the last detection time for this camera
                         camera_last_detection_time[camera_id] = current_time
 
-                        # Kiểm tra xem biển số có trong admin_data không
+                        # Check if the license plate exists in admin_data
                         with admin_data_lock:
-                            matched_customer = next((customer for customer in admin_data if customer['bien_so'].upper() == normalized_text), None)
+                            matched_customer = next((customer for customer in admin_data if customer['license_plate'].upper() == normalized_text), None)
 
                         if matched_customer:
-                            # Auto-fill thông tin từ admin_data
+                            # Auto-fill info from admin_data
                             data.update({
                                 "request_type": matched_customer.get("request_type", ""),
-                                "ngay_bat_dau": matched_customer.get("ngay_bat_dau", ""),
-                                "khu_vuc_lam_viec": matched_customer.get("khu_vuc_lam_viec", ""),
-                                "phong_ban": matched_customer.get("phong_ban", ""),
-                                "don_vi_den": matched_customer.get("don_vi_den", ""),
-                                "muc_dich": matched_customer.get("muc_dich", ""),
-                                "van_ban_tham_chieu": matched_customer.get("van_ban_tham_chieu", ""),
-                                "so_giay_to": matched_customer.get("so_giay_to", ""),
-                                "ten_khach": matched_customer.get("ten_khach", ""),
-                                "so_dien_thoai": matched_customer.get("so_dien_thoai", ""),
-                                "dia_chi_cong_ty": matched_customer.get("dia_chi_cong_ty", ""),
-                                "khach_dai_dien": matched_customer.get("khach_dai_dien", ""),
-                                "ten_xe": matched_customer.get("ten_xe", ""),
-                                "ten_lai_xe": matched_customer.get("ten_lai_xe", ""),
+                                "start_date": matched_customer.get("start_date", ""),
+                                "work_area": matched_customer.get("work_area", ""),
+                                "department": matched_customer.get("department", ""),
+                                "visiting_unit": matched_customer.get("visiting_unit", ""),
+                                "purpose": matched_customer.get("purpose", ""),
+                                "reference_document": matched_customer.get("reference_document", ""),
+                                "id_number": matched_customer.get("id_number", ""),
+                                "guest_name": matched_customer.get("guest_name", ""),
+                                "phone_number": matched_customer.get("phone_number", ""),
+                                "company_address": matched_customer.get("company_address", ""),
+                                "representative_guest": matched_customer.get("representative_guest", ""),
+                                "car_name": matched_customer.get("car_name", ""),
+                                "driver_name": matched_customer.get("driver_name", ""),
                             })
-                            logger.info(f"Matched customer: {matched_customer['ten_khach']}")
+                            logger.info(f"Matched customer: {matched_customer['guest_name']}")
                         else:
-                            # Biển số chưa đăng ký, chỉ cập nhật bien_so và đặt các trường khác về trống
+                            # Unregistered license plate, clear other fields
                             data.update({
                                 "request_type": "",
-                                "ngay_bat_dau": "",
-                                "khu_vuc_lam_viec": "",
-                                "phong_ban": "",
-                                "don_vi_den": "",
-                                "muc_dich": "",
-                                "van_ban_tham_chieu": "",
-                                "so_giay_to": "",
-                                "ten_khach": "",
-                                "so_dien_thoai": "",
-                                "dia_chi_cong_ty": "",
-                                "khach_dai_dien": "",
-                                "ten_xe": "",
-                                "ten_lai_xe": "",
+                                "start_date": "",
+                                "work_area": "",
+                                "department": "",
+                                "visiting_unit": "",
+                                "purpose": "",
+                                "reference_document": "",
+                                "id_number": "",
+                                "guest_name": "",
+                                "phone_number": "",
+                                "company_address": "",
+                                "representative_guest": "",
+                                "car_name": "",
+                                "driver_name": "",
                             })
-                            data["bien_so_valid"] = False
+                            data["license_plate_valid"] = False
                             logger.warning(f"Detected license plate '{normalized_text}' is not registered.")
                 else:
                     with data_lock:
-                        data["bien_so_valid"] = False
-                        # Khi biển số không hợp lệ và không tồn tại trong admin_data, chỉ cập nhật bien_so và đặt các trường khác về trống
+                        data["license_plate_valid"] = False
+                        # When license plate is invalid and not in admin_data, clear other fields
                         data.update({
                             "request_type": "",
-                            "ngay_bat_dau": "",
-                            "khu_vuc_lam_viec": "",
-                            "phong_ban": "",
-                            "don_vi_den": "",
-                            "muc_dich": "",
-                            "van_ban_tham_chieu": "",
-                            "so_giay_to": "",
-                            "ten_khach": "",
-                            "so_dien_thoai": "",
-                            "dia_chi_cong_ty": "",
-                            "khach_dai_dien": "",
-                            "ten_xe": "",
-                            "ten_lai_xe": "",
+                            "start_date": "",
+                            "work_area": "",
+                            "department": "",
+                            "visiting_unit": "",
+                            "purpose": "",
+                            "reference_document": "",
+                            "id_number": "",
+                            "guest_name": "",
+                            "phone_number": "",
+                            "company_address": "",
+                            "representative_guest": "",
+                            "car_name": "",
+                            "driver_name": "",
                         })
                         logger.warning(f"Detected license plate '{normalized_text}' is invalid (less than 6 characters).")
         except Exception as e:
@@ -256,7 +255,7 @@ def process_frame(frame, camera_id):
 
     return detected_objects
 
-# Thay đổi định nghĩa hàm gen_frames
+# Stream frames generator function
 def gen_frames(video_source, camera_id):
     cap = cv2.VideoCapture(video_source)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)  
@@ -269,11 +268,11 @@ def gen_frames(video_source, camera_id):
                 time.sleep(1)
                 continue
 
-            # Submit frame để xử lý YOLO + OCR
+            # Submit frame for YOLO + OCR processing
             future = executor.submit(process_frame, frame, camera_id)
             detected_objects = future.result()
 
-            # Vẽ khung và văn bản nhận diện trên frame
+            # Draw bounding boxes and recognized text on the frame
             for (x1, y1, x2, y2, ocr_result) in detected_objects:
                 try:
                     detected_texts = [line[1][0] for line in ocr_result[0]]
@@ -287,7 +286,7 @@ def gen_frames(video_source, camera_id):
                         else:
                             color = (0, 0, 255)  
                             text_color = (255, 255, 255)
-                            display_text = "Biển số không hợp lệ"
+                            display_text = "Invalid License Plate"
 
                         cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
                         cv2.putText(frame, display_text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, text_color, 2)
@@ -300,59 +299,59 @@ def gen_frames(video_source, camera_id):
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
-# Các route cho các luồng video
+# Routes for video streams
 @app.get('/video_feed1')
 async def video_feed1():
-    # Camera 1: Vào
+    # Camera 1: Entry
     return StreamingResponse(gen_frames('rtsp://admin:namtiep2005@192.168.1.25:554/Streaming/channels/101', camera_id=1), media_type='multipart/x-mixed-replace; boundary=frame')
 
 @app.get('/video_feed2')
 async def video_feed2():
-    # Camera 2: Vào
+    # Camera 2: Entry
     return StreamingResponse(gen_frames('rtsp://pathtech:pathtech1@192.168.1.35:554/stream1', camera_id=2), media_type='multipart/x-mixed-replace; boundary=frame')
 
 @app.get('/video_feed3')
 async def video_feed3():
-    # Camera 3: Ra
+    # Camera 3: Exit
     return StreamingResponse(gen_frames(0, camera_id=3), media_type='multipart/x-mixed-replace; boundary=frame')
 
 @app.get('/video_feed4')
 async def video_feed4():
-    # Camera 4: Ra
+    # Camera 4: Exit
     return StreamingResponse(gen_frames('rtsp://rtsp_stream_url_4', camera_id=4), media_type='multipart/x-mixed-replace; boundary=frame')
 
-# Route cho admin.html và trang chủ
+# Routes for admin.html and home
 @app.get("/", response_class=HTMLResponse)
 @app.get("/admin", response_class=HTMLResponse)
 async def read_admin(request: Request):
     return templates.TemplateResponse("admin.html", {"request": request, "message": None})
 
-# Route cho guest.html
+# Route for guest.html
 @app.get("/guest", response_class=HTMLResponse)
 async def read_guest(request: Request):
     with data_lock:
         current_data = data.copy()
     return templates.TemplateResponse("guest.html", {
         "request": request,
-        "is_editable": False,  # Ban đầu không ở chế độ chỉnh sửa
-        "button_text": "CHỈNH SỬA",
+        "is_editable": False,
+        "button_text": "EDIT",
         "action": "edit",
         "data": current_data,
         "message": None
     })
 
-# Route cho history.html
+# Route for history.html
 @app.get("/history", response_class=HTMLResponse)
 async def read_history(request: Request):
     return templates.TemplateResponse("history.html", {"request": request})
 
-# API để lấy dữ liệu guest hiện tại
+# API to get current guest data
 @app.get("/api/guest", response_class=JSONResponse)
 async def get_guest_data():
     with data_lock:
         return data.copy()
 
-# API để lấy dữ liệu admin
+# API to get admin data
 @app.get("/api/admin", response_class=JSONResponse)
 async def get_admin_data():
     with admin_data_lock:
@@ -363,44 +362,43 @@ async def get_history():
     with history_data_lock:
         return history_data.copy()
 
-# Route để tải lên file Excel cho admin
+# Route to upload Excel file for admin
 @app.post("/admin/upload", response_class=HTMLResponse)
 async def upload_admin_data(request: Request, file: UploadFile = File(...)):
     if not file.filename.endswith(('.xlsx', '.xls')):
         return templates.TemplateResponse("admin.html", {
             "request": request,
-            "message": "Chỉ hỗ trợ file Excel (.xlsx, .xls)."
+            "message": "Only Excel files (.xlsx, .xls) are supported."
         })
 
     try:
         contents = await file.read()
-        # Đọc file Excel sử dụng pandas
         df = pd.read_excel(io.BytesIO(contents))
 
-        # Kiểm tra các cột cần thiết
+        # Check required columns
         required_columns = [
-            "request_type", "ngay_bat_dau", "khu_vuc_lam_viec",
-            "phong_ban", "don_vi_den", "muc_dich",
-            "van_ban_tham_chieu", "so_giay_to", "ten_khach",
-            "so_dien_thoai", "dia_chi_cong_ty", "khach_dai_dien",
-            "ten_xe", "bien_so", "ten_lai_xe"
+            "request_type", "start_date", "work_area",
+            "department", "visiting_unit", "purpose",
+            "reference_document", "id_number", "guest_name",
+            "phone_number", "company_address", "representative_guest",
+            "car_name", "license_plate", "driver_name"
         ]
 
         for col in required_columns:
             if col not in df.columns:
                 return templates.TemplateResponse("admin.html", {
                     "request": request,
-                    "message": f"Thiếu cột: {col}"
+                    "message": f"Missing column: {col}"
                 })
 
-        # Chuyển đổi DataFrame thành danh sách các dict
+        # Convert DataFrame to list of dict
         admin_entries = df.to_dict(orient='records')
 
-        # Chuẩn hóa biển số (bỏ dấu - . và khoảng cách, uppercase)
+        # Normalize license plates
         for entry in admin_entries:
-            original_plate = entry['bien_so']
+            original_plate = entry['license_plate']
             normalized_plate = normalize_license_plate(str(original_plate))
-            entry['bien_so'] = normalized_plate
+            entry['license_plate'] = normalized_plate
 
         with admin_data_lock:
             admin_data.clear()
@@ -410,24 +408,24 @@ async def upload_admin_data(request: Request, file: UploadFile = File(...)):
 
         return templates.TemplateResponse("admin.html", {
             "request": request,
-            "message": f"Tải lên thành công {len(admin_entries)} khách hàng."
+            "message": f"Successfully uploaded {len(admin_entries)} customers."
         })
 
     except Exception as e:
         logger.error(f"Error uploading admin data: {e}")
         return templates.TemplateResponse("admin.html", {
             "request": request,
-            "message": f"Lỗi khi tải lên file: {e}"
+            "message": f"Error uploading file: {e}"
         })
 
-# Route để tải xuống admin data dưới dạng Excel
+# Route to download admin data as Excel
 @app.get("/admin/download")
 async def download_admin_data():
     with admin_data_lock:
         if not admin_data:
-            return JSONResponse(content={"message": "Không có dữ liệu để tải xuống."}, status_code=400)
+            return JSONResponse(content={"message": "No data to download."}, status_code=400)
         df = pd.DataFrame(admin_data)
-        # Chuẩn bị file Excel trong bộ nhớ
+        # Prepare the Excel file in memory
         stream = io.BytesIO()
         df.to_excel(stream, index=False)
         stream.seek(0)
@@ -437,29 +435,29 @@ async def download_admin_data():
             headers={"Content-Disposition": "attachment; filename=admin_data.xlsx"}
         )
 
-# Xử lý POST request cho guest.html
+# Handle POST request for guest.html
 @app.post("/guest", response_class=JSONResponse)
 async def submit_guest(
     request: Request,
     action: str = Form(...),
     request_type: str = Form(None),
-    ngay_bat_dau: str = Form(None),
-    khu_vuc_lam_viec: str = Form(None),
-    phong_ban: str = Form(None),
-    don_vi_den: str = Form(None),
-    muc_dich: str = Form(None),
-    van_ban_tham_chieu: str = Form(None),
-    so_giay_to: str = Form(None),
-    ten_khach: str = Form(None),
-    so_dien_thoai: str = Form(None),
-    dia_chi_cong_ty: str = Form(None),
-    khach_dai_dien: str = Form(None),
-    ten_xe: str = Form(None),
-    bien_so: str = Form(None),
-    ten_lai_xe: str = Form(None)
+    start_date: str = Form(None),
+    work_area: str = Form(None),
+    department: str = Form(None),
+    visiting_unit: str = Form(None),
+    purpose: str = Form(None),
+    reference_document: str = Form(None),
+    id_number: str = Form(None),
+    guest_name: str = Form(None),
+    phone_number: str = Form(None),
+    company_address: str = Form(None),
+    representative_guest: str = Form(None),
+    car_name: str = Form(None),
+    license_plate: str = Form(None),
+    driver_name: str = Form(None)
 ):
     if action == "edit":
-        # Chuyển sang chế độ chỉnh sửa
+        # Switch to edit mode
         with data_lock:
             current_data = data.copy()
         return JSONResponse({
@@ -468,108 +466,107 @@ async def submit_guest(
             "message": None
         })
     elif action == "confirm":
-        # Cập nhật dữ liệu với các giá trị mới
+        # Update data with new values
         form_data = await request.form()
         with data_lock:
             data.update({
                 "request_type": form_data.get("request_type", data["request_type"]),
-                "ngay_bat_dau": form_data.get("ngay_bat_dau", data["ngay_bat_dau"]),
-                "khu_vuc_lam_viec": form_data.get("khu_vuc_lam_viec", data["khu_vuc_lam_viec"]),
-                "phong_ban": form_data.get("phong_ban", data["phong_ban"]),
-                "don_vi_den": form_data.get("don_vi_den", data["don_vi_den"]),
-                "muc_dich": form_data.get("muc_dich", data["muc_dich"]),
-                "van_ban_tham_chieu": form_data.get("van_ban_tham_chieu", data["van_ban_tham_chieu"]),
-                "so_giay_to": form_data.get("so_giay_to", data["so_giay_to"]),
-                "ten_khach": form_data.get("ten_khach", data["ten_khach"]),
-                "so_dien_thoai": form_data.get("so_dien_thoai", data["so_dien_thoai"]),
-                "dia_chi_cong_ty": form_data.get("dia_chi_cong_ty", data["dia_chi_cong_ty"]),
-                "khach_dai_dien": form_data.get("khach_dai_dien", data["khach_dai_dien"]),
-                "ten_xe": form_data.get("ten_xe", data["ten_xe"]),
-                "bien_so": form_data.get("bien_so", data["bien_so"]),
-                "ten_lai_xe": form_data.get("ten_lai_xe", data["ten_lai_xe"]),
+                "start_date": form_data.get("start_date", data["start_date"]),
+                "work_area": form_data.get("work_area", data["work_area"]),
+                "department": form_data.get("department", data["department"]),
+                "visiting_unit": form_data.get("visiting_unit", data["visiting_unit"]),
+                "purpose": form_data.get("purpose", data["purpose"]),
+                "reference_document": form_data.get("reference_document", data["reference_document"]),
+                "id_number": form_data.get("id_number", data["id_number"]),
+                "guest_name": form_data.get("guest_name", data["guest_name"]),
+                "phone_number": form_data.get("phone_number", data["phone_number"]),
+                "company_address": form_data.get("company_address", data["company_address"]),
+                "representative_guest": form_data.get("representative_guest", data["representative_guest"]),
+                "car_name": form_data.get("car_name", data["car_name"]),
+                "license_plate": form_data.get("license_plate", data["license_plate"]),
+                "driver_name": form_data.get("driver_name", data["driver_name"]),
             })
-            # Xác thực biển số sau khi cập nhật
-            normalized_bien_so = normalize_license_plate(data["bien_so"])
-            if is_valid_license_plate(normalized_bien_so):
-                data["bien_so"] = normalized_bien_so
-                data["bien_so_valid"] = True
-                logger.info(f"Confirmed bien_so: {data['bien_so']}")
-                
-                # Kiểm tra xem biển số có trong admin_data không
+            # Validate license plate after update
+            normalized_plate = normalize_license_plate(data["license_plate"])
+            if is_valid_license_plate(normalized_plate):
+                data["license_plate"] = normalized_plate
+                data["license_plate_valid"] = True
+                logger.info(f"Confirmed license_plate: {data['license_plate']}")
+
+                # Check if the license plate is in admin_data
                 with admin_data_lock:
-                    matched_customer = next((customer for customer in admin_data if customer['bien_so'].upper() == normalized_bien_so), None)
+                    matched_customer = next((customer for customer in admin_data if customer['license_plate'].upper() == normalized_plate), None)
 
                 if matched_customer:
-                    # Cập nhật thông tin từ form vào admin_data
+                    # Update admin_data with form info
                     updated_customer = {
                         "request_type": data.get("request_type", ""),
-                        "ngay_bat_dau": data.get("ngay_bat_dau", ""),
-                        "khu_vuc_lam_viec": data.get("khu_vuc_lam_viec", ""),
-                        "phong_ban": data.get("phong_ban", ""),
-                        "don_vi_den": data.get("don_vi_den", ""),
-                        "muc_dich": data.get("muc_dich", ""),
-                        "van_ban_tham_chieu": data.get("van_ban_tham_chieu", ""),
-                        "so_giay_to": data.get("so_giay_to", ""),
-                        "ten_khach": data.get("ten_khach", ""),
-                        "so_dien_thoai": data.get("so_dien_thoai", ""),
-                        "dia_chi_cong_ty": data.get("dia_chi_cong_ty", ""),
-                        "khach_dai_dien": data.get("khach_dai_dien", ""),
-                        "ten_xe": data.get("ten_xe", ""),
-                        "bien_so": data.get("bien_so", ""),
-                        "ten_lai_xe": data.get("ten_lai_xe", ""),
+                        "start_date": data.get("start_date", ""),
+                        "work_area": data.get("work_area", ""),
+                        "department": data.get("department", ""),
+                        "visiting_unit": data.get("visiting_unit", ""),
+                        "purpose": data.get("purpose", ""),
+                        "reference_document": data.get("reference_document", ""),
+                        "id_number": data.get("id_number", ""),
+                        "guest_name": data.get("guest_name", ""),
+                        "phone_number": data.get("phone_number", ""),
+                        "company_address": data.get("company_address", ""),
+                        "representative_guest": data.get("representative_guest", ""),
+                        "car_name": data.get("car_name", ""),
+                        "license_plate": data.get("license_plate", ""),
+                        "driver_name": data.get("driver_name", ""),
                     }
                     update_admin_data(updated_customer)
                 else:
-                    # Biển số chưa đăng ký, thêm mới vào admin_data
+                    # Unregistered license plate, add new to admin_data
                     new_customer = {
                         "request_type": data.get("request_type", ""),
-                        "ngay_bat_dau": data.get("ngay_bat_dau", ""),
-                        "khu_vuc_lam_viec": data.get("khu_vuc_lam_viec", ""),
-                        "phong_ban": data.get("phong_ban", ""),
-                        "don_vi_den": data.get("don_vi_den", ""),
-                        "muc_dich": data.get("muc_dich", ""),
-                        "van_ban_tham_chieu": data.get("van_ban_tham_chieu", ""),
-                        "so_giay_to": data.get("so_giay_to", ""),
-                        "ten_khach": data.get("ten_khach", ""),
-                        "so_dien_thoai": data.get("so_dien_thoai", ""),
-                        "dia_chi_cong_ty": data.get("dia_chi_cong_ty", ""),
-                        "khach_dai_dien": data.get("khach_dai_dien", ""),
-                        "ten_xe": data.get("ten_xe", ""),
-                        "bien_so": data.get("bien_so", ""),
-                        "ten_lai_xe": data.get("ten_lai_xe", ""),
+                        "start_date": data.get("start_date", ""),
+                        "work_area": data.get("work_area", ""),
+                        "department": data.get("department", ""),
+                        "visiting_unit": data.get("visiting_unit", ""),
+                        "purpose": data.get("purpose", ""),
+                        "reference_document": data.get("reference_document", ""),
+                        "id_number": data.get("id_number", ""),
+                        "guest_name": data.get("guest_name", ""),
+                        "phone_number": data.get("phone_number", ""),
+                        "company_address": data.get("company_address", ""),
+                        "representative_guest": data.get("representative_guest", ""),
+                        "car_name": data.get("car_name", ""),
+                        "license_plate": data.get("license_plate", ""),
+                        "driver_name": data.get("driver_name", ""),
                     }
                     update_admin_data(new_customer)
             else:
-                data["bien_so_valid"] = False
-                # Khi biển số không hợp lệ và không tồn tại trong admin_data, chỉ cập nhật bien_so và đặt các trường khác về trống
+                data["license_plate_valid"] = False
+                # If license plate is invalid, clear other fields
                 data.update({
                     "request_type": "",
-                    "ngay_bat_dau": "",
-                    "khu_vuc_lam_viec": "",
-                    "phong_ban": "",
-                    "don_vi_den": "",
-                    "muc_dich": "",
-                    "van_ban_tham_chieu": "",
-                    "so_giay_to": "",
-                    "ten_khach": "",
-                    "so_dien_thoai": "",
-                    "dia_chi_cong_ty": "",
-                    "khach_dai_dien": "",
-                    "ten_xe": "",
-                    "ten_lai_xe": "",
+                    "start_date": "",
+                    "work_area": "",
+                    "department": "",
+                    "visiting_unit": "",
+                    "purpose": "",
+                    "reference_document": "",
+                    "id_number": "",
+                    "guest_name": "",
+                    "phone_number": "",
+                    "company_address": "",
+                    "representative_guest": "",
+                    "car_name": "",
+                    "driver_name": "",
                 })
-                logger.warning(f"Confirmed bien_so '{normalized_bien_so}' is invalid (less than 6 characters).")
-        
-        # Trả về thông báo thành công hoặc cảnh báo
+                logger.warning(f"Confirmed license plate '{normalized_plate}' is invalid (less than 6 characters).")
+
         with data_lock:
             current_data = data.copy()
-        if current_data["bien_so_valid"]:
-            message = "Đã lưu thông tin thành công!"
+        if current_data["license_plate_valid"]:
+            message = "Information saved successfully!"
         else:
-            message = "Thông tin không hợp lệ! Vui lòng kiểm tra lại."
-        
+            message = "Invalid information! Please check again."
+
         return JSONResponse({
-            "status": "success" if current_data["bien_so_valid"] else "error",
+            "status": "success" if current_data["license_plate_valid"] else "error",
             "message": message,
             "data": current_data
         })

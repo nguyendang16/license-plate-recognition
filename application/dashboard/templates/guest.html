@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản Lý Thông Tin Khách</title>
+    <title>Manage Guest Information</title>
     <link rel="stylesheet" href="/static/guest.css">
     <style>
-        /* Thêm các kiểu CSS cho thông báo và nút nếu cần */
         .alert-success {
             background-color: #d4edda;
             color: #155724;
@@ -40,14 +39,14 @@
 </head>
 <body>
     <div class="header">
-        <a href="/" class="home-button">TRANG CHỦ</a>
+        <a href="/" class="home-button">HOME</a>
     </div>
     
     <div class="container">
-        <h1>Quản Lý Thông Tin Khách</h1>
+        <h1>Manage Guest Information</h1>
         <div id="message-container">
             {% if message %}
-                {% if "thành công" in message %}
+                {% if "successfully" in message|lower %}
                     <div class="alert-success">{{ message }}</div>
                 {% else %}
                     <div class="alert-error">{{ message }}</div>
@@ -59,111 +58,111 @@
                 <form id="guest-form">
                     <input type="hidden" name="action" id="form-action" value="{{ action }}">
                     <div class="section">
-                        <label class="label-small" for="request_type">Loại yêu cầu</label>
+                        <label class="label-small" for="request_type">Request Type</label>
                         <div class="radio-group">
                             <label>
                                 <input type="radio" name="request_type" value="once" 
                                     {% if data.request_type == 'once' %}checked{% endif %} 
-                                    {% if not is_editable %}disabled{% endif %}> Một lần
+                                    {% if not is_editable %}disabled{% endif %}> One-time
                             </label>
                             <label>
                                 <input type="radio" name="request_type" value="repeat" 
                                     {% if data.request_type == 'repeat' %}checked{% endif %} 
-                                    {% if not is_editable %}disabled{% endif %}> Lặp lại
+                                    {% if not is_editable %}disabled{% endif %}> Repeat
                             </label>
                         </div>
 
-                        <h3>Thông tin chung</h3>
+                        <h3>General Information</h3>
                         <div class="row">
                             <div class="field">
-                                <label>Ngày bắt đầu <span class="required">*</span></label>
-                                <input type="date" name="ngay_bat_dau" class="small-input" required value="{{ data.ngay_bat_dau }}" {% if not is_editable %}readonly{% endif %}>
+                                <label>Start Date <span class="required">*</span></label>
+                                <input type="date" name="ngay_bat_dau" class="small-input" required value="{{ data.start_date }}" {% if not is_editable %}readonly{% endif %}>
                             </div>
                             <div class="field">
-                                <label>Khu vực làm việc <span class="required">*</span></label>
-                                <input type="text" name="khu_vuc_lam_viec" class="small-input" placeholder="Nhập khu vực làm việc" required value="{{ data.khu_vuc_lam_viec }}" {% if not is_editable %}readonly{% endif %}>
+                                <label>Work Area <span class="required">*</span></label>
+                                <input type="text" name="khu_vuc_lam_viec" class="small-input" placeholder="Enter work area" required value="{{ data.work_area }}" {% if not is_editable %}readonly{% endif %}>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="field">
-                                <label>Phòng ban</label>
-                                <input type="text" name="phong_ban" class="small-input" placeholder="Nhập phòng ban" value="{{ data.phong_ban }}" {% if not is_editable %}readonly{% endif %}>
+                                <label>Department</label>
+                                <input type="text" name="phong_ban" class="small-input" placeholder="Enter department" value="{{ data.department }}" {% if not is_editable %}readonly{% endif %}>
                             </div>
                             <div class="field">
-                                <label>Đơn vị đến <span class="required">*</span></label>
-                                <input type="text" name="don_vi_den" class="small-input" placeholder="Nhập đơn vị" required value="{{ data.don_vi_den }}" {% if not is_editable %}readonly{% endif %}>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="field">
-                                <label>Mục đích <span class="required">*</span></label>
-                                <input type="text" name="muc_dich" class="small-input" placeholder="Nhập mục đích đến" required value="{{ data.muc_dich }}" {% if not is_editable %}readonly{% endif %}>
-                            </div>
-                            <div class="field">
-                                <label>Văn bản tham chiếu</label> 
-                                <input type="text" name="van_ban_tham_chieu" class="small-input" placeholder="Nhập số văn bản" value="{{ data.van_ban_tham_chieu }}" {% if not is_editable %}readonly{% endif %}>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <h3>Thông tin khách</h3>
-                        <div class="row">
-                            <div class="field">
-                                <label>Số giấy tờ <span class="required">*</span></label>
-                                <input type="text" name="so_giay_to" class="small-input" placeholder="Nhập số giấy tờ" required value="{{ data.so_giay_to }}" {% if not is_editable %}readonly{% endif %}>
-                            </div>
-                            <div class="field">
-                                <label>Tên khách <span class="required">*</span></label>
-                                <input type="text" name="ten_khach" class="small-input" placeholder="Nhập tên khách" required value="{{ data.ten_khach }}" {% if not is_editable %}readonly{% endif %}>
+                                <label>Visiting Unit <span class="required">*</span></label>
+                                <input type="text" name="don_vi_den" class="small-input" placeholder="Enter visiting unit" required value="{{ data.visiting_unit }}" {% if not is_editable %}readonly{% endif %}>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="field">
-                                <label>Số điện thoại <span class="required">*</span></label>
-                                <input type="text" name="so_dien_thoai" class="small-input" placeholder="Nhập số điện thoại" required value="{{ data.so_dien_thoai }}" {% if not is_editable %}readonly{% endif %}>
+                                <label>Purpose <span class="required">*</span></label>
+                                <input type="text" name="muc_dich" class="small-input" placeholder="Enter purpose" required value="{{ data.purpose }}" {% if not is_editable %}readonly{% endif %}>
                             </div>
                             <div class="field">
-                                <label>Địa chỉ / Công ty <span class="required">*</span></label>
-                                <input type="text" name="dia_chi_cong_ty" class="small-input" placeholder="Nhập địa chỉ hoặc công ty" required value="{{ data.dia_chi_cong_ty }}" {% if not is_editable %}readonly{% endif %}>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="field">
-                                <label>Là khách đại diện <span class="required">*</span></label>
-                                <input type="text" name="khach_dai_dien" class="small-input" placeholder="Nhập tên người đại diện" required value="{{ data.khach_dai_dien }}" {% if not is_editable %}readonly{% endif %}>
+                                <label>Reference Document</label> 
+                                <input type="text" name="van_ban_tham_chieu" class="small-input" placeholder="Enter reference document number" value="{{ data.reference_document }}" {% if not is_editable %}readonly{% endif %}>
                             </div>
                         </div>
                     </div>
 
                     <div class="section">
-                        <h3>Thông tin xe</h3>
+                        <h3>Guest Information</h3>
                         <div class="row">
                             <div class="field">
-                                <label>Tên xe <span class="required">*</span></label>
-                                <input type="text" name="ten_xe" class="small-input" placeholder="Nhập tên xe" required value="{{ data.ten_xe }}" {% if not is_editable %}readonly{% endif %}>
+                                <label>ID Number <span class="required">*</span></label>
+                                <input type="text" name="so_giay_to" class="small-input" placeholder="Enter ID number" required value="{{ data.id_number }}" {% if not is_editable %}readonly{% endif %}>
                             </div>
                             <div class="field">
-                                <label>Biển số <span class="required">*</span></label>
-                                <input type="text" id="bien_so" name="bien_so" class="small-input" placeholder="Nhập biển số xe" required value="{{ data.bien_so }}" {% if not is_editable %}readonly{% endif %}>
+                                <label>Guest Name <span class="required">*</span></label>
+                                <input type="text" name="ten_khach" class="small-input" placeholder="Enter guest name" required value="{{ data.guest_name }}" {% if not is_editable %}readonly{% endif %}>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="field">
-                                <label>Tên lái xe <span class="required">*</span></label>
-                                <input type="text" name="ten_lai_xe" class="small-input" placeholder="Nhập tên lái xe" required value="{{ data.ten_lai_xe }}" {% if not is_editable %}readonly{% endif %}>
+                                <label>Phone Number <span class="required">*</span></label>
+                                <input type="text" name="so_dien_thoai" class="small-input" placeholder="Enter phone number" required value="{{ data.phone_number }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                            <div class="field">
+                                <label>Company/Address <span class="required">*</span></label>
+                                <input type="text" name="dia_chi_cong_ty" class="small-input" placeholder="Enter company/address" required value="{{ data.company_address }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="field">
+                                <label>Representative Guest <span class="required">*</span></label>
+                                <input type="text" name="khach_dai_dien" class="small-input" placeholder="Enter representative guest name" required value="{{ data.representative_guest }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>Vehicle Information</h3>
+                        <div class="row">
+                            <div class="field">
+                                <label>Car Name <span class="required">*</span></label>
+                                <input type="text" name="ten_xe" class="small-input" placeholder="Enter car name" required value="{{ data.car_name }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                            <div class="field">
+                                <label>License Plate <span class="required">*</span></label>
+                                <input type="text" id="bien_so" name="bien_so" class="small-input" placeholder="Enter license plate" required value="{{ data.license_plate }}" {% if not is_editable %}readonly{% endif %}>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="field">
+                                <label>Driver Name <span class="required">*</span></label>
+                                <input type="text" name="ten_lai_xe" class="small-input" placeholder="Enter driver name" required value="{{ data.driver_name }}" {% if not is_editable %}readonly{% endif %}>
                             </div>
                         </div>
                     </div>
 
                     <div class="button-container">
-                        <button type="button" class="open-button">MỞ CỔNG</button>
-                        <button type="button" id="edit-confirm-button" class="edit-button">CHỈNH SỬA</button>
+                        <button type="button" class="open-button">OPEN GATE</button>
+                        <button type="button" id="edit-confirm-button" class="edit-button">EDIT</button>
                     </div>
                 </form>
             </div>
@@ -172,41 +171,38 @@
                 <div class="image-grid">
                     <div class="image-container">
                         <div class="image-box">
-                            <img id="image1" src="{{ data.image1_url }}" alt="Ảnh 1">
+                            <img id="image1" src="{{ data.image1_url }}" alt="Image 1">
                         </div>
-                        <p>THỜI GIAN 1: <span id="thoi_gian_1" style="color: red; font-weight: bold;">{{ data.thoi_gian_1 }}</span></p>
+                        <p>TIME 1: <span id="thoi_gian_1" style="color: red; font-weight: bold;">{{ data.time_1 }}</span></p>
                     </div>
                     <div class="image-container">
                         <div class="image-box">
-                            <img id="image2" src="{{ data.image2_url }}" alt="Ảnh 2">
+                            <img id="image2" src="{{ data.image2_url }}" alt="Image 2">
                         </div>
-                        <p>THỜI GIAN 2: <span id="thoi_gian_2" style="color: red; font-weight: bold;">{{ data.thoi_gian_2 }}</span></p>
+                        <p>TIME 2: <span id="thoi_gian_2" style="color: red; font-weight: bold;">{{ data.time_2 }}</span></p>
                     </div>
                     <div class="image-container">
                         <div class="image-box">
-                            <img id="image3" src="{{ data.image3_url }}" alt="Ảnh 3">
+                            <img id="image3" src="{{ data.image3_url }}" alt="Image 3">
                         </div>
-                        <p>THỜI GIAN 3: <span id="thoi_gian_3" style="color: red; font-weight: bold;">{{ data.thoi_gian_3 }}</span></p>
+                        <p>TIME 3: <span id="thoi_gian_3" style="color: red; font-weight: bold;">{{ data.time_3 }}</span></p>
                     </div>
                     <div class="image-container">
                         <div class="image-box">
-                            <img id="image4" src="{{ data.image4_url }}" alt="Ảnh 4">
+                            <img id="image4" src="{{ data.image4_url }}" alt="Image 4">
                         </div>
-                        <p>THỜI GIAN 4: <span id="thoi_gian_4" style="color: red; font-weight: bold;">{{ data.thoi_gian_4 }}</span></p>
+                        <p>TIME 4: <span id="thoi_gian_4" style="color: red; font-weight: bold;">{{ data.time_4 }}</span></p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Thêm JavaScript để xử lý AJAX Form Submission và quản lý trạng thái chỉnh sửa -->
     <script>
-        let isEditing = false; // Biến để theo dõi trạng thái chỉnh sửa
+        let isEditing = false;
 
-        // Hàm lấy dữ liệu từ backend
         async function fetchGuestData() {
             if (isEditing) {
-                // Nếu đang ở chế độ chỉnh sửa, không cập nhật dữ liệu
                 return;
             }
             try {
@@ -223,27 +219,25 @@
         }
 
         function updateGuestUI(data) {
-            // Cập nhật các ô thời gian
-            document.getElementById('thoi_gian_1').textContent = data.thoi_gian_1 || '';
-            document.getElementById('thoi_gian_2').textContent = data.thoi_gian_2 || '';
-            document.getElementById('thoi_gian_3').textContent = data.thoi_gian_3 || '';
-            document.getElementById('thoi_gian_4').textContent = data.thoi_gian_4 || '';
+            document.getElementById('thoi_gian_1').textContent = data.time_1 || '';
+            document.getElementById('thoi_gian_2').textContent = data.time_2 || '';
+            document.getElementById('thoi_gian_3').textContent = data.time_3 || '';
+            document.getElementById('thoi_gian_4').textContent = data.time_4 || '';
         }
 
         function updateFormFields(data) {
             if (isEditing) {
-                return; // Nếu đang ở chế độ chỉnh sửa, không cập nhật form
+                return;
             }
 
             const bienSoInput = document.getElementById('bien_so');
-            const previousBienSo = bienSoInput.value;
 
-            if (bienSoInput.value !== data.bien_so && data.bien_so !== "") {
-                bienSoInput.value = data.bien_so;
+            if (bienSoInput.value !== data.license_plate && data.license_plate !== "") {
+                bienSoInput.value = data.license_plate;
             }
 
-            if (data.bien_so_valid) {
-                // Auto-fill các trường thông tin khi biển số đã đăng ký
+            if (data.license_plate_valid) {
+                // Auto-fill fields
                 const requestTypeOnce = document.querySelector('input[name="request_type"][value="once"]');
                 const requestTypeRepeat = document.querySelector('input[name="request_type"][value="repeat"]');
 
@@ -253,21 +247,21 @@
                     requestTypeRepeat.checked = true;
                 }
 
-                document.getElementsByName('ngay_bat_dau')[0].value = data.ngay_bat_dau;
-                document.getElementsByName('khu_vuc_lam_viec')[0].value = data.khu_vuc_lam_viec;
-                document.getElementsByName('phong_ban')[0].value = data.phong_ban;
-                document.getElementsByName('don_vi_den')[0].value = data.don_vi_den;
-                document.getElementsByName('muc_dich')[0].value = data.muc_dich;
-                document.getElementsByName('van_ban_tham_chieu')[0].value = data.van_ban_tham_chieu;
-                document.getElementsByName('so_giay_to')[0].value = data.so_giay_to;
-                document.getElementsByName('ten_khach')[0].value = data.ten_khach;
-                document.getElementsByName('so_dien_thoai')[0].value = data.so_dien_thoai;
-                document.getElementsByName('dia_chi_cong_ty')[0].value = data.dia_chi_cong_ty;
-                document.getElementsByName('khach_dai_dien')[0].value = data.khach_dai_dien;
-                document.getElementsByName('ten_xe')[0].value = data.ten_xe;
-                document.getElementsByName('ten_lai_xe')[0].value = data.ten_lai_xe;
+                document.getElementsByName('ngay_bat_dau')[0].value = data.start_date;
+                document.getElementsByName('khu_vuc_lam_viec')[0].value = data.work_area;
+                document.getElementsByName('phong_ban')[0].value = data.department;
+                document.getElementsByName('don_vi_den')[0].value = data.visiting_unit;
+                document.getElementsByName('muc_dich')[0].value = data.purpose;
+                document.getElementsByName('van_ban_tham_chieu')[0].value = data.reference_document;
+                document.getElementsByName('so_giay_to')[0].value = data.id_number;
+                document.getElementsByName('ten_khach')[0].value = data.guest_name;
+                document.getElementsByName('so_dien_thoai')[0].value = data.phone_number;
+                document.getElementsByName('dia_chi_cong_ty')[0].value = data.company_address;
+                document.getElementsByName('khach_dai_dien')[0].value = data.representative_guest;
+                document.getElementsByName('ten_xe')[0].value = data.car_name;
+                document.getElementsByName('ten_lai_xe')[0].value = data.driver_name;
             } else {
-                // Nếu biển số chưa đăng ký, chỉ cập nhật bien_so và xóa các trường khác
+                // Clear fields if not registered
                 document.querySelectorAll('input[name="request_type"]').forEach(radio => radio.checked = false);
                 document.getElementsByName('ngay_bat_dau')[0].value = "";
                 document.getElementsByName('khu_vuc_lam_viec')[0].value = "";
@@ -285,33 +279,29 @@
             }
         }
 
-        // Xử lý sự kiện khi nhấn nút "CHỈNH SỬA" hoặc "XÁC NHẬN"
         document.getElementById('edit-confirm-button').addEventListener('click', function(event) {
-            event.preventDefault(); // Ngăn chặn hành vi mặc định của form
+            event.preventDefault();
 
             if (!isEditing) {
-                // Chuyển sang chế độ chỉnh sửa
+                // Switch to edit mode
                 isEditing = true;
-                this.textContent = "XÁC NHẬN";
+                this.textContent = "CONFIRM";
                 this.classList.remove('edit-button');
                 this.classList.add('confirm-button');
 
-                // Cập nhật trường action thành "confirm"
                 document.getElementById('form-action').value = "confirm";
 
-                // Enable form fields for editing
                 const inputs = document.querySelectorAll('input, select, textarea');
                 inputs.forEach(input => {
                     input.removeAttribute('readonly');
                     input.removeAttribute('disabled');
                 });
 
-                // Enable radio buttons
                 document.querySelectorAll('input[name="request_type"]').forEach(radio => {
                     radio.removeAttribute('disabled');
                 });
             } else {
-                // Đang ở chế độ xác nhận, gửi form qua AJAX
+                // Confirm changes
                 const form = document.getElementById('guest-form');
                 const formData = new FormData(form);
 
@@ -327,30 +317,26 @@
                         displayMessage(dataResponse.message, false);
                     }
 
-                    // Cập nhật form fields với dữ liệu mới
                     updateFormFields(dataResponse.data);
 
-                    // Chuyển lại nút thành "CHỈNH SỬA"
+                    // Switch back to EDIT mode
                     isEditing = false;
                     const button = document.getElementById('edit-confirm-button');
-                    button.textContent = "CHỈNH SỬA";
+                    button.textContent = "EDIT";
                     button.classList.remove('confirm-button');
                     button.classList.add('edit-button');
 
-                    // Reset trường action thành "edit"
                     document.getElementById('form-action').value = "edit";
 
-                    // Disable form fields
                     const inputs = document.querySelectorAll('input, select, textarea');
                     inputs.forEach(input => {
-                        if (input.type !== 'radio') { // Radio buttons sẽ được xử lý riêng
+                        if (input.type !== 'radio') {
                             input.setAttribute('readonly', true);
                             input.setAttribute('disabled', true);
                         }
                     });
 
-                    // Disable radio buttons if bien_so_valid is True
-                    if (dataResponse.data.bien_so_valid) {
+                    if (dataResponse.data.license_plate_valid) {
                         document.querySelectorAll('input[name="request_type"]').forEach(radio => {
                             radio.setAttribute('disabled', true);
                         });
@@ -362,33 +348,27 @@
                 })
                 .catch(error => {
                     console.error('Error submitting form:', error);
-                    displayMessage("Có lỗi xảy ra khi lưu thông tin.", false);
+                    displayMessage("An error occurred while saving the information.", false);
                 });
             }
         });
 
-        // Hàm hiển thị thông báo
         function displayMessage(message, isSuccess) {
             const alertContainer = document.getElementById('message-container');
-            // Xóa bất kỳ thông báo hiện tại nào
             const existingAlert = alertContainer.querySelector('.alert-success, .alert-error');
             if (existingAlert) {
                 existingAlert.remove();
             }
 
-            // Tạo phần tử thông báo mới
             const alertDiv = document.createElement('div');
             alertDiv.className = isSuccess ? 'alert-success' : 'alert-error';
             alertDiv.textContent = message;
 
-            // Thêm vào container
             alertContainer.appendChild(alertDiv);
         }
 
-        // Gọi fetchGuestData mỗi 1 giây
         setInterval(fetchGuestData, 1000);
 
-        // Gọi lần đầu khi tải trang
         window.onload = fetchGuestData;
     </script>
 </body>

@@ -1,31 +1,31 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lịch Sử Ra Vào</title>
+    <title>Entry/Exit History</title>
     <link rel="stylesheet" href="/static/history.css">
 </head>
 <body>
     <div class="sidebar">
         <a href="/admin">
             <img src="https://img.icons8.com/ios-filled/50/000000/admin-settings-male.png" alt="Admin Icon"/>
-            Quản lý
+            Administration
         </a>
         <a href="/guest">
             <img src="https://img.icons8.com/ios-filled/50/000000/information.png" alt="Info Icon"/>
-            Thông tin khách
+            Guest Info
         </a>
         <a href="/history">
             <img src="https://img.icons8.com/ios-filled/50/000000/time-machine.png" alt="History Icon"/>
-            Lịch sử ra vào
+            Entry/Exit History
         </a>
     </div>
 
     <div class="content">
-        <h1>Lịch Sử Ra Vào</h1>
+        <h1>Entry/Exit History</h1>
         {% if message %}
-            {% if "thành công" in message %}
+            {% if "successfully" in message|lower %}
                 <div class="alert-success">{{ message }}</div>
             {% else %}
                 <div class="alert-error">{{ message }}</div>
@@ -35,25 +35,24 @@
         <table class="customer-table" id="history-table">
             <thead>
                 <tr>
-                    <th>STT</th>
-                    <th>Tên khách</th>
-                    <th>Biển số xe</th>
-                    <th>Tên xe</th>
-                    <th>Khu vực làm việc</th>
-                    <th>Đơn vị đến</th>
-                    <th>Mục đích</th>
-                    <th>Ngày</th>
-                    <th>Thời gian</th>
-                    <th>Trạng thái ra vào</th>
+                    <th>No.</th>
+                    <th>Guest Name</th>
+                    <th>License Plate</th>
+                    <th>Car Name</th>
+                    <th>Work Area</th>
+                    <th>Visiting Unit</th>
+                    <th>Purpose</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>In/Out Status</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Dữ liệu sẽ được thêm qua JavaScript -->
+                <!-- Data will be populated via JavaScript -->
             </tbody>
         </table>
     </div>
 
-    <!-- Thêm JavaScript để lấy và hiển thị dữ liệu lịch sử -->
     <script>
         async function fetchHistoryData() {
             try {
@@ -70,38 +69,33 @@
 
         function populateHistoryTable(historyData) {
             const tableBody = document.querySelector('#history-table tbody');
-            tableBody.innerHTML = ''; // Xóa nội dung cũ
+            tableBody.innerHTML = '';
+
+            const fields = [
+                'guest_name',
+                'license_plate',
+                'car_name',
+                'work_area',
+                'visiting_unit',
+                'purpose',
+                'date',
+                'time',
+                'in_out_status'
+            ];
 
             historyData.forEach((record, index) => {
                 const row = document.createElement('tr');
 
-                // STT
                 const sttCell = document.createElement('td');
                 sttCell.textContent = index + 1;
                 row.appendChild(sttCell);
 
-                // Các cột thông tin
-                const fields = [
-                    'ten_khach',
-                    'bien_so',
-                    'ten_xe',
-                    'khu_vuc_lam_viec',
-                    'don_vi_den',
-                    'muc_dich',
-                    'ngay',
-                    'thoi_gian',
-                    'trang_thai_ra_vao'
-                ];
-
                 fields.forEach((field) => {
                     const cell = document.createElement('td');
                     cell.textContent = record[field] || '';
-
-                    // Định dạng màu đỏ cho cột "Thời gian"
-                    if (field === 'thoi_gian') {
+                    if (field === 'time') {
                         cell.classList.add('time-cell');
                     }
-
                     row.appendChild(cell);
                 });
 
@@ -109,10 +103,10 @@
             });
         }
 
-        // Gọi fetchHistoryData mỗi 5 giây để cập nhật bảng
+        // Fetch history data every 5 seconds
         setInterval(fetchHistoryData, 5000);
 
-        // Gọi lần đầu khi tải trang
+        // Initial call
         window.onload = fetchHistoryData;
     </script>
 </body>
